@@ -194,7 +194,7 @@ background:#fff; color:var(--gris); font-weight:900; font-size:13px; cursor:poin
 .cuadrante-controls .spacer{ flex:1; }
 .cuadrante-controls .reset-btn{ margin-left:0; }
 .apply-msg{ flex-basis:100%; text-align:right; }
-.cal-grid{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)) 104px; gap:8px; }
+.cal-grid{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:8px; }
 .cal-week{ display:contents; }
 .cal-head{ font-size:12.5px; font-weight:900; color:#000; text-align:center; background:var(--amarillo-claro); border-radius:10px; padding:6px 2px; }
 .cal-head.side{ background:var(--naranja-claro); color:var(--naranja-osc); font-size:11px; line-height:1.15; }
@@ -220,8 +220,8 @@ font-size:11.5px; font-weight:800; color:var(--tinta); padding:2px 2px; cursor:p
 .cal-drv-row.edited .cal-select{ background:var(--amarillo-claro); color:#6b4f00; }
 .cal-drv-row.sin-hijo .cal-select{ text-decoration:underline dotted var(--rosa); }
 .cal-rest-msg{ font-size:12px; font-weight:800; }
-.cal-side{ display:flex; flex-direction:column; justify-content:center; gap:4px; }
-.cal-side .side-label{ display:none; }
+/* Rótulo de semana: solo se muestra en móvil */
+.cal-side{ display:none; }
 .sem-select{
 width:100%; padding:8px 6px; border-radius:12px; border:2px solid var(--naranja);
 background:var(--naranja-claro); color:var(--naranja-osc); font-size:12.5px; font-weight:900; cursor:pointer; min-height:40px;
@@ -235,6 +235,32 @@ background:var(--naranja-claro); color:var(--naranja-osc); font-size:12.5px; fon
 .pie-table td{ padding:7px 12px; text-align:center; color:var(--tinta-suave); font-weight:700; border-bottom:1px solid var(--borde); }
 .pie-table td:first-child{ text-align:left; color:var(--gris); font-weight:800; white-space:nowrap; }
 .pie-table tr.tot td{ font-weight:900; color:var(--tinta); border-bottom:none; font-size:14px; }
+
+.cal-cell.past{ background:#f7f8fb; }
+.cal-cell.past .cal-date b{ color:var(--gris); }
+.cal-drv-row.fijo span{ font-size:11.5px; font-weight:800; color:var(--tinta-suave); padding:3px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.day-head{ display:flex; align-items:center; justify-content:center; gap:8px; }
+.pasado-tag{ font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.05em; background:#fff; color:var(--gris); border-radius:999px; padding:2px 8px; }
+.day-card.dia-pasado{ opacity:.8; }
+
+.consulta-tag{ font-size:11.5px; font-weight:900; text-transform:uppercase; letter-spacing:.05em; color:var(--tinta-suave); background:var(--fondo); border-radius:999px; padding:6px 12px; }
+.cal-drv-row.fijo span{ font-size:12px; font-weight:800; color:var(--tinta); padding:3px 6px; border-radius:8px; background:var(--fondo); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-cell.past .cal-drv-row.fijo span{ color:var(--tinta-suave); background:transparent; }
+.cal-drv-row.edited span{ background:var(--amarillo-claro); color:#6b4f00; }
+.cal-drv-row.sin-hijo span{ text-decoration:underline dotted var(--rosa); }
+.sem-pill{ display:block; text-align:center; padding:8px 6px; border-radius:12px; background:var(--naranja-claro); color:var(--naranja-osc); font-weight:900; font-size:12.5px; }
+.config-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:16px; padding:12px 16px; position:sticky; bottom:12px; z-index:20; border:2px solid transparent; }
+.config-bar.pendiente{ border-color:var(--naranja); }
+.config-bar .spacer{ flex:1; }
+.config-bar .reset-btn{ margin-left:0; }
+.config-bar .save-btn{ padding:10px 22px; }
+.config-bar button:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
+.config-estado{ font-size:13.5px; font-weight:800; color:var(--tinta-suave); }
+.config-estado.pendiente{ color:var(--naranja-osc); }
+.config-estado.pendiente::before{ content:""; display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--naranja); margin-right:7px; }
+.turnos-list{ display:flex; flex-direction:column; gap:6px; }
+.turno-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; font-weight:800; }
+.turno-row .sem-select{ width:auto; min-width:110px; min-height:36px; padding:5px 8px; }
 
 /* ---------- Aviso ---------- */
 .toast{
@@ -285,7 +311,7 @@ input#weekPicker{ min-height:36px; padding:6px 12px; font-size:14px; }
 .grid{ grid-template-columns:1fr; gap:8px; }
 /* Tarjetas de día compactas */
 .day-card{ border-radius:14px; border-width:1.5px; }
-.day-head{ text-align:left; padding:5px 12px; border-bottom-width:2px; }
+.day-head{ text-align:left; justify-content:space-between; padding:5px 12px; border-bottom-width:2px; }
 .day-head .day-name{ font-size:14px; }
 .day-body{ padding:8px 10px 10px; gap:6px; display:grid; grid-template-columns:1fr 1fr; }
 .day-body > div:nth-child(3), .day-body > .deportistas-wrap{ grid-column:1 / -1; }
@@ -313,16 +339,20 @@ select.driver-select, select.time-input{ min-height:34px; padding:5px 6px; font-
 .dias-table td.name{ font-size:14px; }
 .day-toggle{ min-width:0; font-size:12px; padding:0 2px; }
 .cuadrante-controls .spacer{ display:none; }
-.apply-btn, .cuadrante-controls .reset-btn{ width:100%; }
+.consulta-tag{ display:none; }
+.config-bar{ bottom:calc(84px + env(safe-area-inset-bottom)); }
+.config-bar .spacer{ display:none; }
+.config-estado{ flex-basis:100%; font-size:12.5px; }
+.config-bar .reset-btn, .config-bar .save-btn{ flex:1; white-space:nowrap; padding:9px 10px; font-size:13.5px; min-height:40px; }
+.config-bar{ padding:10px 12px; gap:8px; }
+.config-bar .save-btn{ flex:2; }
 input#monthPicker{ flex:1; }
 .apply-msg{ text-align:left; }
 /* Cuadrante como lista por semanas */
 .cal-grid{ display:flex; flex-direction:column; gap:14px; }
 .cal-head{ display:none; }
 .cal-week{ display:flex; flex-direction:column; gap:6px; }
-.cal-side{ order:-1; flex-direction:row; align-items:center; justify-content:space-between; gap:10px; padding:2px 2px 4px; border-bottom:2px solid var(--naranja-claro); }
-.cal-side .side-label{ display:block; font-size:13px; font-weight:900; }
-.cal-side .side-label small{ display:block; font-size:11px; color:var(--gris); font-weight:700; }
+.cal-side{ display:block; order:-1; padding:2px 2px 4px; border-bottom:2px solid var(--naranja-claro); font-size:13px; font-weight:900; }
 .sem-select{ width:auto; min-width:120px; }
 .cal-cell.blank{ display:none; }
 .cal-cell{ min-height:0; display:grid; grid-template-columns:50px minmax(0,1fr) minmax(0,1fr); grid-template-areas:"fecha ida vuelta" "fecha dep dep"; align-items:center; gap:4px 8px; padding:10px 12px; }
@@ -337,7 +367,7 @@ input#monthPicker{ flex:1; }
 .cal-drv-row.ida{ grid-area:ida; }
 .cal-drv-row.vuelta{ grid-area:vuelta; }
 .cal-drv-row{ font-size:13px; }
-.cal-select{ font-size:13.5px; padding:8px 0; min-height:40px; }
+.cal-drv-row.fijo span{ font-size:13.5px; padding:8px 6px; }
 .cal-rest-msg{ font-size:13px; }
 }
 @media (max-width:360px){
@@ -400,16 +430,13 @@ input#monthPicker{ flex:1; }
 <section class="view" id="view-cuadrante" data-view="cuadrante">
 <div class="view-title">
 <h2>Cuadrante del mes</h2>
-<p>Reparto equitativo de idas (↗) y vueltas (↙) según los días de entreno. Martes y jueves cuentan más por ser trayectos largos. Puedes cambiar cualquier conductor: los cambios se marcan en amarillo.</p>
 </div>
 <div class="card">
 <div class="cuadrante-controls">
 <span class="label-mini">Mes</span>
 <input type="month" id="monthPicker">
 <span class="spacer"></span>
-<button id="resetCuadranteBtn" class="reset-btn" style="display:none;">Volver al reparto automático</button>
-<button id="applyCuadranteBtn" class="apply-btn">Aplicar a los trayectos semanales</button>
-<span id="applyMsg" class="apply-msg"></span>
+<span class="consulta-tag">Solo consulta</span>
 </div>
 <div class="cal-grid" id="calGrid"></div>
 <div class="reparto" id="repartoGrid"></div>
@@ -419,8 +446,9 @@ input#monthPicker{ flex:1; }
 <section class="view" id="view-configuracion" data-view="configuracion">
 <div class="view-title">
 <h2>Configuración</h2>
-<p>Marca, para cada día, si el deportista hace la ida (↗), la vuelta (↙) o ambas. El cuadrante solo asigna conductor a los trayectos en los que va alguien.</p>
+<p>Marca, para cada día, si el deportista hace la ida (↗), la vuelta (↙) o ambas. Los cambios no se aplican hasta que pulses <b>Guardar configuración</b>.</p>
 </div>
+
 <div class="config-grid">
 <div class="card" style="overflow-x:auto;">
 <table class="dias-table" id="diasTable"></table>
@@ -435,9 +463,20 @@ input#monthPicker{ flex:1; }
 <div class="card">
 <h3>Familias</h3>
 <ul class="familias-list" id="familiasList"></ul>
-<p>Cada día conducen las familias cuyo deportista entrena. Alberto y Mónica cuentan como una unidad y se turnan por semanas desde el cuadrante.</p>
+<p>Cada día conducen las familias cuyo deportista entrena. Alberto y Mónica cuentan como una unidad y se turnan por semanas.</p>
+</div>
+<div class="card">
+<h3>Turnos Alberto / Mónica</h3>
+<div class="turnos-list" id="turnosList"></div>
+<p>Quién conduce de la familia cada semana (próximas 8 semanas).</p>
 </div>
 </div>
+</div>
+<div class="config-bar card" id="configBar">
+<span class="config-estado" id="configEstado">Sin cambios pendientes</span>
+<span class="spacer"></span>
+<button id="descartarConfigBtn" class="reset-btn" disabled>Descartar</button>
+<button id="guardarConfigBtn" class="save-btn" disabled>Guardar configuración</button>
 </div>
 </section>
 
@@ -471,7 +510,7 @@ const DEPORTISTAS = ["Jorge","Dani","Alvaro"];
 
 // ============ GOOGLE SHEETS (vía Google Apps Script) ============
 // 1) Crea una Google Sheet, ve a Extensiones -> Apps Script.
-// 2) Pega el código que te di en "AppsScript_CodigoGS.txt".
+// 2) Pega el código del archivo "Codigo.gs" y ejecuta la función "configurar".
 // 3) Implementa como "Aplicación web", acceso "Cualquier usuario".
 // 4) Pega aquí la URL que termina en ".../exec":
 const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbwmJOc_bYMN-urllYYiwdynLbB8obnDnRK_EHxm1E9QpEwM7GKeKFpOuvLyUnE9sEZKCw/exec";
@@ -650,8 +689,43 @@ const td = getTrayectosDeportistas();
 return DEPORTISTAS.filter(n => td[n][dayName][tipo]);
 }
 
+// ---- Borrador de configuración: nada se aplica hasta pulsar "Guardar" ----
+let borradorConfig = null;
+function semanasProximas(n){
+const res = [];
+let d = mondayOf(new Date());
+for(let i = 0; i < n; i++){ res.push(dateKey(d)); d = new Date(d); d.setDate(d.getDate() + 7); }
+return res;
+}
+function crearBorrador(){
+if(borradorConfig) return borradorConfig;
+const turnos = {};
+semanasProximas(8).forEach(w => turnos[w] = { ...configSemana(w).familia });
+borradorConfig = {
+trayectos: JSON.parse(JSON.stringify(getTrayectosDeportistas())),
+peso: getPesoLargo(),
+turnos,
+sucio: false
+};
+return borradorConfig;
+}
+function marcarSucio(){
+borradorConfig.sucio = true;
+actualizarBarraConfig();
+}
+function actualizarBarraConfig(){
+const sucio = !!(borradorConfig && borradorConfig.sucio);
+document.getElementById("guardarConfigBtn").disabled = !sucio;
+document.getElementById("descartarConfigBtn").disabled = !sucio;
+const est = document.getElementById("configEstado");
+est.textContent = sucio ? "Hay cambios sin guardar" : "Sin cambios pendientes";
+est.classList.toggle("pendiente", sucio);
+document.getElementById("configBar").classList.toggle("pendiente", sucio);
+}
+
 function renderDiasBlock(){
-const td = getTrayectosDeportistas();
+const b = crearBorrador();
+const td = b.trayectos;
 const table = document.getElementById("diasTable");
 const boton = (n, d, tipo) => {
 const on = td[n][d][tipo];
@@ -674,11 +748,53 @@ table.querySelectorAll(".tray-toggle").forEach(btn => {
 btn.addEventListener("click", () => {
 const v = td[btn.dataset.name][btn.dataset.day];
 v[btn.dataset.tipo] = !v[btn.dataset.tipo];
+marcarSucio();
+renderDiasBlock();
+});
+});
+
+// Peso
+const pesoInput = document.getElementById("pesoLargo");
+if(document.activeElement !== pesoInput) pesoInput.value = b.peso;
+
+// Turnos Alberto / Mónica
+const familias = UNIDADES.filter(u => u.miembros.length > 1);
+const fmt = d => `${d.getDate()} ${MES_CORTO[d.getMonth()]}`;
+document.getElementById("turnosList").innerHTML = Object.keys(b.turnos).map(w => {
+const lunes = parseISODate(w); const vie = new Date(lunes); vie.setDate(lunes.getDate() + 4);
+return `<div class="turno-row"><span>${fmt(lunes)} – ${fmt(vie)}</span>${familias.map(u => `
+<select class="sem-select" data-week="${w}" data-unidad="${u.nombre}" aria-label="Turno ${u.nombre} semana ${fmt(lunes)}">
+${u.miembros.map(m => `<option value="${m}" ${b.turnos[w][u.nombre] === m ? "selected" : ""}>${m}</option>`).join("")}
+</select>`).join("")}</div>`;
+}).join("");
+document.querySelectorAll("#turnosList .sem-select").forEach(sel => {
+sel.addEventListener("change", () => {
+b.turnos[sel.dataset.week][sel.dataset.unidad] = sel.value;
+marcarSucio();
+});
+});
+actualizarBarraConfig();
+}
+
+function guardarConfiguracion(){
+if(!borradorConfig || !borradorConfig.sucio) return;
+const b = borradorConfig;
+if(!assignments[CONFIG_KEY]) assignments[CONFIG_KEY] = {};
+const cfg = assignments[CONFIG_KEY];
+cfg.trayectosDeportistas = JSON.parse(JSON.stringify(b.trayectos));
+cfg.pesoLargo = b.peso;
+const cs = getConductoresSemana();
+Object.keys(b.turnos).forEach(w => { cs[w] = { ...(cs[w] || {}), familia: { ...b.turnos[w] } }; });
 saveAssignments(assignments);
+borradorConfig = null;
 renderDiasBlock();
 renderCuadrante();
-});
-});
+mostrarAviso(`<b>Configuración guardada.</b> El cuadrante se ha actualizado (los días pasados no cambian). <a href="#cuadrante">Ver cuadrante</a>`, "ok");
+}
+function descartarConfiguracion(){
+borradorConfig = null;
+renderDiasBlock();
+mostrarAviso("Cambios de configuración descartados.", "ok");
 }
 
 // ============ CUADRANTE MENSUAL ============
@@ -744,6 +860,25 @@ return p >= 1 && p <= 5 ? p : PESO_LARGO_DEFECTO;
 }
 function pesoDia(dayName){ return DIAS_LARGOS.includes(dayName) ? getPesoLargo() : 1; }
 function fmtNum(n){ return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0$/, "").replace(".", ","); }
+
+// Un día es "pasado" si es anterior a hoy. Hoy y los días siguientes se
+// consideran futuros (se pueden actualizar).
+function hoy0(){ const d = new Date(); d.setHours(0,0,0,0); return d; }
+function esPasado(fecha){ const f = new Date(fecha); f.setHours(0,0,0,0); return f < hoy0(); }
+function fechaDeDia(week, dayName){
+const lunes = parseISODate(week.start);
+const f = new Date(lunes); f.setDate(lunes.getDate() + DIAS_TEMPLATE.indexOf(dayName));
+return f;
+}
+
+// Histórico de días pasados (fotos fijas del cuadrante)
+let historicoPendiente = false;
+function getHistorico(){
+if(!assignments[CONFIG_KEY]) assignments[CONFIG_KEY] = {};
+const cfg = assignments[CONFIG_KEY];
+if(!cfg.historico || typeof cfg.historico !== "object") cfg.historico = {};
+return cfg.historico;
+}
 
 // Cambios manuales del cuadrante: { "2026-10-05": { ida:"...", vuelta:"..." } }
 function getCuadranteManual(){
@@ -819,23 +954,58 @@ const date = new Date(year, month, dnum);
 const dow = date.getDay();
 if(dow === 0 || dow === 6) continue;
 const dayName = DIAS_TEMPLATE[dow - 1];
-const depsIda = deportistasTrayecto(dayName, "ida");
-const depsVuelta = deportistasTrayecto(dayName, "vuelta");
-const deps = DEPORTISTAS.filter(n => depsIda.includes(n) || depsVuelta.includes(n));
+const key = dateKey(date);
+const pasado = esPasado(date);
+const m = manual[key] || {};
+let depsIda = deportistasTrayecto(dayName, "ida");
+let depsVuelta = deportistasTrayecto(dayName, "vuelta");
+// Deportistas cambiados desde la vista semanal para esta fecha
+if(Array.isArray(m.depsIda)) depsIda = DEPORTISTAS.filter(n => m.depsIda.includes(n));
+if(Array.isArray(m.depsVuelta)) depsVuelta = DEPORTISTAS.filter(n => m.depsVuelta.includes(n));
 const week = WEEKS.find(w => w.start === dateKey(mondayOf(date)));
 const saved = week ? assignments[keyFor(week.label, dayName)] : null;
-const locacion = (saved && saved.trayectos && saved.trayectos[0] && saved.trayectos[0].locacion) || PATRON_UBICACION[dayName];
-const item = { date, key: dateKey(date), dayName, deps, depsIda, depsVuelta, locacion, ida:"", vuelta:"", editIda:false, editVuelta:false };
+const st = saved && saved.trayectos && saved.trayectos[0] ? saved.trayectos[0] : null;
+const locacion = (st && st.locacion) || PATRON_UBICACION[dayName];
+// Días pasados: quedan fijos. La primera vez que un día pasa a ser pasado se
+// guarda una "foto" (histórico) con su reparto, y desde entonces se muestra
+// siempre igual, aunque cambie la configuración o la vista semanal.
+// Sus trayectos cuentan para el reparto de los días siguientes.
+const historico = getHistorico();
+const fijar = (item) => {
+const peso = pesoDia(dayName);
+[["ida", item.ida], ["vuelta", item.vuelta]].forEach(([tipo, c]) => {
+const u = c ? unidadDe(c) : null;
+if(!u) return;
+auto[u.nombre][tipo]++; auto[u.nombre].carga += peso; if(peso > 1) auto[u.nombre].largos++;
+autoPersona[c] = (autoPersona[c] || 0) + 1;
+});
+previo = [item.ida, item.vuelta].filter(Boolean).map(unidadDe).filter(Boolean);
+turno++;
+dias.push(item);
+};
+if(pasado && historico[key]){
+const h = historico[key];
+const dI = DEPORTISTAS.filter(n => (h.depsIda || []).includes(n));
+const dV = DEPORTISTAS.filter(n => (h.depsVuelta || []).includes(n));
+fijar({ date, key, dayName, deps: DEPORTISTAS.filter(n => dI.includes(n) || dV.includes(n)), depsIda: dI, depsVuelta: dV,
+locacion: h.locacion || locacion, ida: h.ida || "", vuelta: h.vuelta || "", editIda:false, editVuelta:false, pasado:true });
+continue;
+}
+const deps = DEPORTISTAS.filter(n => depsIda.includes(n) || depsVuelta.includes(n));
+const item = { date, key, dayName, deps, depsIda, depsVuelta, locacion, ida:"", vuelta:"", editIda:false, editVuelta:false, pasado };
 if(deps.length && UNIDADES.length){
 const r = asignarDia(depsIda, depsVuelta, configSemana(dateKey(mondayOf(date))), pesoDia(dayName));
 item.ida = r.ida; item.vuelta = r.vuelta;
 previo = [item.ida, item.vuelta].filter(Boolean).map(unidadDe);
 turno++;
-const m = manual[item.key];
 if(m){
 if(depsIda.length && m.ida !== undefined && m.ida !== item.ida){ item.ida = m.ida; item.editIda = true; }
 if(depsVuelta.length && m.vuelta !== undefined && m.vuelta !== item.vuelta){ item.vuelta = m.vuelta; item.editVuelta = true; }
 }
+}
+if(pasado){
+historico[key] = { ida:item.ida, vuelta:item.vuelta, depsIda:item.depsIda, depsVuelta:item.depsVuelta, locacion:item.locacion };
+historicoPendiente = true;
 }
 dias.push(item);
 }
@@ -863,8 +1033,8 @@ const val = it[tipo];
 const edit = tipo === "ida" ? it.editIda : it.editVuelta;
 const u = val ? unidadDe(val) : null;
 const sinHijo = u && !u.hijos.some(h => depsTipo.includes(h));
-const opts = `<option value="">—</option>` + CONDUCTORES.map(c => `<option value="${c}" ${c === val ? "selected" : ""}>${c}</option>`).join("");
-return `<label class="cal-drv-row ${tipo} ${edit ? "edited" : ""} ${sinHijo ? "sin-hijo" : ""}" title="${tipo === "ida" ? "Ida" : "Vuelta"}${edit ? " (cambiado a mano)" : ""}${sinHijo ? " · su deportista no entrena este día" : ""}">${tipo === "ida" ? "↗" : "↙"}<select class="cal-select" data-key="${it.key}" data-tipo="${tipo}">${opts}</select></label>`;
+const titulo = (tipo === "ida" ? "Ida" : "Vuelta") + (it.pasado ? " · día pasado" : "") + (edit && !it.pasado ? " · cambiado en Trayectos" : "") + (sinHijo ? " · su deportista no va en este trayecto" : "");
+return `<div class="cal-drv-row ${tipo} fijo ${edit && !it.pasado ? "edited" : ""} ${sinHijo ? "sin-hijo" : ""}" title="${titulo}">${tipo === "ida" ? "↗" : "↙"}<span>${val || "—"}</span></div>`;
 }
 
 const MES_CORTO = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
@@ -884,18 +1054,15 @@ return res;
 function familiaSelectHtml(weekStart){
 const cfg = configSemana(weekStart);
 return UNIDADES.filter(u => u.miembros.length > 1).map(u =>
-`<select class="sem-select" data-week="${weekStart}" data-unidad="${u.nombre}" title="Quién conduce de ${u.nombre} esta semana">
-${u.miembros.map(m => `<option value="${m}" ${cfg.familia[u.nombre] === m ? "selected" : ""}>${m}</option>`).join("")}
-</select>`).join("");
+`<span class="sem-pill" title="Conduce de ${u.nombre} esta semana">${cfg.familia[u.nombre]}</span>`).join("");
 }
 
 function renderCuadrante(){
 const picker = document.getElementById("monthPicker");
 if(!picker.value) return;
 const [y, m] = picker.value.split("-").map(Number);
-const pesoInput = document.getElementById("pesoLargo");
-if(document.activeElement !== pesoInput) pesoInput.value = getPesoLargo();
 cuadranteActual = buildCuadrante(y, m - 1);
+if(historicoPendiente){ historicoPendiente = false; saveAssignments(assignments); }
 const { dias, stats } = cuadranteActual;
 const grid = document.getElementById("calGrid");
 const hoy = dateKey(new Date());
@@ -909,7 +1076,7 @@ if(!it.deps.length){
 return `<div class="cal-cell rest${esHoy}"><div class="cal-date"><span class="cal-dow">${it.dayName.slice(0,3)}</span><b>${it.date.getDate()}</b></div><div class="cal-rest-msg">Sin entreno</div></div>`;
 }
 return `
-<div class="cal-cell${esHoy}">
+<div class="cal-cell${esHoy}${it.pasado ? " past" : ""}" ${it.pasado ? `title="Día pasado: no se modifica"` : ""}>
 <div class="cal-date"><span class="cal-dow">${it.dayName.slice(0,3)}</span><b>${it.date.getDate()}${DIAS_LARGOS.includes(it.dayName) ? `<span class="largo" title="Trayecto largo (×${fmtNum(getPesoLargo())})">×${fmtNum(getPesoLargo())}</span>` : ""}</b><span class="loc-pill ${locClass(it.locacion)}">${it.locacion}</span></div>
 ${(() => { const mismo = it.depsIda.join() === it.depsVuelta.join(); const txt = mismo ? it.deps.join(", ") : [it.depsIda.length ? "↗ " + it.depsIda.join(", ") : "", it.depsVuelta.length ? "↙ " + it.depsVuelta.join(", ") : ""].filter(Boolean).join(" · "); return `<div class="cal-dep" title="${txt}">${txt}</div>`; })()}
 ${cellDriverSelect(it, "ida")}
@@ -918,7 +1085,7 @@ ${cellDriverSelect(it, "vuelta")}
 };
 
 let html = DIAS_TEMPLATE.map(d => `<div class="cal-head">${d}</div>`).join("") +
-`<div class="cal-head side">${familias.map(u => u.nombre.replace(" + ", " / ")).join("<br>")}</div>`;
+"";
 const fmtCorto = d => `${d.getDate()} ${MES_CORTO[d.getMonth()]}`;
 semanasDelMes(y, m - 1).forEach(w => {
 html += `<div class="cal-week">`;
@@ -927,29 +1094,10 @@ const d = new Date(w.lunes); d.setDate(w.lunes.getDate() + i);
 const it = porFecha[dateKey(d)];
 html += it ? celda(it) : `<div class="cal-cell blank"></div>`;
 }
-html += `<div class="cal-side"><span class="side-label">${fmtCorto(w.lunes)} – ${fmtCorto(w.viernes)}<small>Conduce de ${familias.map(u => u.nombre.replace(" + ", " / ")).join(", ")}</small></span>${familiaSelectHtml(w.start)}</div></div>`;
+html += `<div class="cal-side">${fmtCorto(w.lunes)} – ${fmtCorto(w.viernes)}</div></div>`;
 });
 grid.innerHTML = html;
 
-grid.querySelectorAll(".cal-select").forEach(sel => {
-sel.addEventListener("change", () => {
-const manual = getCuadranteManual();
-const k = sel.dataset.key;
-manual[k] = { ...(manual[k] || {}), [sel.dataset.tipo]: sel.value };
-saveAssignments(assignments);
-renderCuadrante();
-});
-});
-grid.querySelectorAll(".sem-select").forEach(sel => {
-sel.addEventListener("change", () => {
-const familia = { ...configSemana(sel.dataset.week).familia, [sel.dataset.unidad]: sel.value };
-setConfigSemana(sel.dataset.week, { familia });
-renderCuadrante();
-});
-});
-
-const hayCambios = dias.some(it => it.editIda || it.editVuelta);
-document.getElementById("resetCuadranteBtn").style.display = hayCambios ? "" : "none";
 
 // Pie: trayectos por conductor
 const total = k => CONDUCTORES.reduce((x, c) => x + stats[c][k], 0);
@@ -963,51 +1111,6 @@ document.getElementById("repartoGrid").innerHTML = `
 <tr><td>de ellos largos (M/J)</td>${CONDUCTORES.map(c => `<td>${stats[c].largos}</td>`).join("")}<td>${total("largos")}</td></tr>
 <tr class="tot"><td>Carga ponderada</td>${CONDUCTORES.map(c => `<td>${fmtNum(stats[c].carga)}</td>`).join("")}<td>${fmtNum(total("carga"))}</td></tr>
 </table>`;
-}
-
-function restablecerCuadrante(){
-if(!cuadranteActual) return;
-if(!confirm("Se quitarán los cambios manuales de este mes y se volverá al reparto automático. ¿Continuar?")) return;
-const manual = getCuadranteManual();
-cuadranteActual.dias.forEach(it => delete manual[it.key]);
-saveAssignments(assignments);
-renderCuadrante();
-}
-
-// Vuelca el cuadrante en las tarjetas semanales (conductores y deportistas).
-// Crea las semanas que falten y no toca las semanas ya pasadas.
-function aplicarCuadrante(){
-const msg = document.getElementById("applyMsg");
-if(!cuadranteActual) return;
-if(!confirm("Se sobrescribirán los conductores y deportistas de los días de este mes (salvo semanas pasadas). ¿Continuar?")) return;
-let aplicados = 0, omitidos = 0, nuevasSemanas = false;
-cuadranteActual.dias.forEach(it => {
-const monday = mondayOf(it.date);
-const start = dateKey(monday);
-if(getWeekStatus(start) === "past"){ omitidos++; return; }
-let week = WEEKS.find(w => w.start === start);
-if(!week){
-week = { start, label: formatWeekLabel(monday), days: buildDefaultDays() };
-WEEKS.push(week);
-WEEKS.sort((a,b) => a.start.localeCompare(b.start));
-extraWeeksCache.push(week);
-nuevasSemanas = true;
-}
-const dayObj = week.days.find(x => x.day === it.dayName);
-getAssignment(week.label, dayObj);
-const t = assignments[keyFor(week.label, it.dayName)].trayectos[0];
-t.conductorIda = it.ida;
-t.conductorVuelta = it.vuelta;
-t.deportistas = [...it.deps];
-aplicados++;
-});
-if(nuevasSemanas) saveExtraWeeks(extraWeeksCache);
-saveAssignments(assignments);
-const iso = document.getElementById("weekPicker").value;
-if(iso) currentWeekIndex = findWeekIndexByISO(iso);
-renderDays();
-msg.textContent = `Aplicado a ${aplicados} día${aplicados === 1 ? "" : "s"}` + (omitidos ? ` · ${omitidos} día${omitidos === 1 ? "" : "s"} de semanas pasadas sin cambios` : "");
-msg.className = "apply-msg ok";
 }
 
 let currentWeekIndex = -1;
@@ -1085,7 +1188,8 @@ statusFlag.textContent = status === "current"
 week.days.forEach(d=>{
 const a = getAssignment(week.label, d);
 const card = document.createElement("div");
-card.className = "day-card" + (status === "future" ? " future-dim" : status === "current" ? " current-week" : "");
+const diaPasado = esPasado(fechaDeDia(week, d.day));
+card.className = "day-card" + (status === "future" ? " future-dim" : status === "current" ? " current-week" : "") + (diaPasado && status !== "past" ? " dia-pasado" : "");
 
 const t = a.trayectos[0];
 const tagsHtml = DEPORTISTAS.map(name => {
@@ -1095,7 +1199,7 @@ return `<span class="tag-chip ${isSel ? "selected":""} ${editable ? "" : "locked
 
 card.innerHTML = `
 <div class="day-head">
-<span class="day-name">${d.day}</span>
+<span class="day-name">${d.day}</span>${diaPasado && status !== "past" ? `<span class="pasado-tag" title="Los cambios de este día no actualizan el cuadrante">Pasado</span>` : ""}
 </div>
 <div class="day-body">
 <div>
@@ -1142,6 +1246,7 @@ if(editable){
 grid.querySelectorAll("select.driver-select[data-role], select.time-input").forEach(sel=>{
 sel.addEventListener("change", (e)=>{
 setAssignment(week.label, e.target.dataset.day, { [e.target.dataset.role]: e.target.value });
+if(e.target.dataset.role === "conductorIda" || e.target.dataset.role === "conductorVuelta") trasCambioSemanal(e.target.dataset.day);
 });
 });
 grid.querySelectorAll("select.loc-select").forEach(sel=>{
@@ -1160,6 +1265,7 @@ let list = a2.trayectos[0].deportistas.slice();
 if(list.includes(name)) list = list.filter(n=>n!==name);
 else list.push(name);
 setAssignment(week.label, day, { deportistas: list });
+trasCambioSemanal(day);
 renderDays();
 });
 });
@@ -1189,38 +1295,62 @@ document.getElementById("prevWeek").disabled = false;
 document.getElementById("nextWeek").disabled = false;
 }
 
-// Pasa los conductores de la semana mostrada al cuadrante (como cambios
-// manuales). Solo se copian los conductores asignados; "Sin asignar" no
-// borra lo que haya en el cuadrante. Devuelve cuántos trayectos cambian.
-function sincronizarSemanaConCuadrante(){
-if(currentWeekIndex === -1) return { cambios:0, dias:0 };
+// Lleva los cambios de la vista semanal al cuadrante: conductores y
+// deportistas de cada día. Solo afecta a días de hoy en adelante; los días
+// pasados no se actualizan. "Sin asignar" no borra el conductor del cuadrante.
+// Devuelve cuántos trayectos del cuadrante han cambiado.
+let cambiosPendientes = 0;
+function sincronizarSemanaConCuadrante(soloDia){
+if(currentWeekIndex === -1) return { cambios:0, pasados:0 };
 const week = WEEKS[currentWeekIndex];
-const lunes = parseISODate(week.start);
 const manual = getCuadranteManual();
 const cache = {};
-const valorCuadrante = (fecha) => {
+const cuadranteDe = (fecha, refrescar) => {
 const mk = fecha.getFullYear() + "-" + fecha.getMonth();
-if(!cache[mk]) cache[mk] = buildCuadrante(fecha.getFullYear(), fecha.getMonth());
-return cache[mk].dias.find(x => x.key === dateKey(fecha));
+if(refrescar || !cache[mk]) cache[mk] = buildCuadrante(fecha.getFullYear(), fecha.getMonth());
+return cache[mk];
 };
-let cambios = 0, dias = 0;
-week.days.forEach(d => {
-const idx = DIAS_TEMPLATE.indexOf(d.day);
-if(idx < 0) return;
-const fecha = new Date(lunes); fecha.setDate(lunes.getDate() + idx);
+const huella = it => it ? [it.ida, it.vuelta, it.depsIda.join(), it.depsVuelta.join()].join("|") : "";
+const dias = week.days.filter(d => DIAS_TEMPLATE.includes(d.day) && (!soloDia || d.day === soloDia));
+const antes = {};
+let pasados = 0;
+dias.forEach(d => {
+const fecha = fechaDeDia(week, d.day);
+if(esPasado(fecha)){ pasados++; return; }
+const key = dateKey(fecha);
+antes[key] = huella(cuadranteDe(fecha).dias.find(x => x.key === key));
 const t = getAssignment(week.label, d).trayectos[0];
-const actual = valorCuadrante(fecha);
-if(!actual) return;
-let tocado = false;
-[["ida", t.conductorIda, actual.depsIda], ["vuelta", t.conductorVuelta, actual.depsVuelta]].forEach(([tipo, val, deps]) => {
-if(!val || !deps.length) return;
-if(actual[tipo] !== val) cambios++;
-manual[actual.key] = { ...(manual[actual.key] || {}), [tipo]: val };
-tocado = true;
+const entrada = { ...(manual[key] || {}) };
+// Deportistas: los que se quitan salen de ida y vuelta; los que se añaden van a ambos.
+const cfgIda = deportistasTrayecto(d.day, "ida");
+const cfgVuelta = deportistasTrayecto(d.day, "vuelta");
+const union = DEPORTISTAS.filter(n => cfgIda.includes(n) || cfgVuelta.includes(n));
+const sel = DEPORTISTAS.filter(n => (t.deportistas || []).includes(n));
+if(sel.join() === union.join()){
+delete entrada.depsIda; delete entrada.depsVuelta;
+} else {
+entrada.depsIda = sel.filter(n => cfgIda.includes(n) || !union.includes(n));
+entrada.depsVuelta = sel.filter(n => cfgVuelta.includes(n) || !union.includes(n));
+}
+if(t.conductorIda) entrada.ida = t.conductorIda;
+if(t.conductorVuelta) entrada.vuelta = t.conductorVuelta;
+if(Object.keys(entrada).length) manual[key] = entrada; else delete manual[key];
 });
-if(tocado) dias++;
+let cambios = 0;
+Object.keys(antes).forEach(key => {
+const fecha = parseISODate(key);
+const despues = huella(cuadranteDe(fecha, true).dias.find(x => x.key === key));
+if(despues !== antes[key]) cambios++;
 });
-return { cambios, dias };
+return { cambios, pasados };
+}
+
+// Tras cualquier cambio en una tarjeta semanal
+function trasCambioSemanal(day){
+const { cambios } = sincronizarSemanaConCuadrante(day);
+cambiosPendientes += cambios;
+saveAssignments(assignments);
+renderCuadrante();
 }
 
 let toastTimer = null;
@@ -1233,12 +1363,14 @@ toastTimer = setTimeout(() => el.classList.remove("show"), 4500);
 }
 
 document.getElementById("saveBtn").addEventListener("click", ()=>{
-const { cambios } = sincronizarSemanaConCuadrante();
+const r = sincronizarSemanaConCuadrante();
+const cambios = cambiosPendientes + r.cambios;
+cambiosPendientes = 0;
 saveAssignments(assignments);
 renderCuadrante();
-const extra = cambios
-? `Cuadrante actualizado: ${cambios} trayecto${cambios === 1 ? "" : "s"} cambiado${cambios === 1 ? "" : "s"}.`
-: `El cuadrante ya estaba al día.`;
+const extra = (cambios
+? `Cuadrante actualizado: ${cambios} día${cambios === 1 ? "" : "s"} con cambios.`
+: `El cuadrante ya estaba al día.`) + (r.pasados ? ` Los días pasados no se actualizan.` : "");
 mostrarAviso(`<b>Cambios guardados.</b> ${extra} <a href="#cuadrante">Ver cuadrante</a>`, "ok");
 const msg = document.getElementById("saveMsg");
 msg.textContent = "Guardado";
@@ -1316,6 +1448,7 @@ data = data || {};
 assignments = data.assignments || {};
 extraWeeksCache = data.extraWeeks || [];
 loadAllWeeks();
+if(borradorConfig && !borradorConfig.sucio) borradorConfig = null;
 renderDiasBlock();
 renderCuadrante();
 }
@@ -1349,15 +1482,24 @@ document.getElementById("daysGrid").innerHTML =
 }
 
 document.getElementById("monthPicker").addEventListener("change", renderCuadrante);
+document.getElementById("guardarConfigBtn").addEventListener("click", guardarConfiguracion);
+document.getElementById("descartarConfigBtn").addEventListener("click", descartarConfiguracion);
+document.getElementById("pesoLargo").addEventListener("input", (e) => {
+const v = Number(e.target.value);
+if(!(v >= 1 && v <= 5)) return;
+crearBorrador().peso = v;
+marcarSucio();
+});
 document.getElementById("pesoLargo").addEventListener("change", (e) => {
 const v = Math.min(5, Math.max(1, Number(e.target.value) || PESO_LARGO_DEFECTO));
-if(!assignments[CONFIG_KEY]) assignments[CONFIG_KEY] = {};
-assignments[CONFIG_KEY].pesoLargo = v;
-saveAssignments(assignments);
-renderCuadrante();
+e.target.value = v;
+crearBorrador().peso = v;
+marcarSucio();
 });
-document.getElementById("applyCuadranteBtn").addEventListener("click", aplicarCuadrante);
-document.getElementById("resetCuadranteBtn").addEventListener("click", restablecerCuadrante);
+window.addEventListener("beforeunload", (e) => {
+if(borradorConfig && borradorConfig.sucio){ e.preventDefault(); e.returnValue = ""; }
+});
+
 
 function renderFamiliasList(){
 const ul = document.getElementById("familiasList");
