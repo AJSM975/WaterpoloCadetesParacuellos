@@ -262,6 +262,9 @@ background:var(--naranja-claro); color:var(--naranja-osc); font-size:12.5px; fon
 .turno-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; font-weight:800; }
 .turno-row .sem-select{ width:auto; min-width:110px; min-height:36px; padding:5px 8px; }
 
+.refresh-btn{ padding:8px 14px; border-radius:999px; border:2px solid var(--borde); background:#fff; color:var(--tinta-suave); font-weight:800; font-size:13px; cursor:pointer; min-height:38px; }
+.refresh-btn:hover{ border-color:var(--naranja); color:var(--naranja-osc); }
+
 /* ---------- Aviso ---------- */
 .toast{
 position:fixed; left:50%; bottom:24px; transform:translate(-50%, 20px); z-index:100;
@@ -406,7 +409,8 @@ input#monthPicker{ flex:1; }
 </div>
 <span class="no-data-flag" id="noDataFlag">Sin trayectos registrados para esta semana</span>
 <span class="status-flag" id="statusFlag"></span>
-<span class="status-flag current" id="syncFlag" style="display:none;">Sincronizado</span>
+<span class="status-flag current" id="syncFlag" style="display:none;">Guardado</span>
+<button id="refreshBtn" class="refresh-btn" title="Traer los cambios de los demás" aria-label="Actualizar datos">↻ Actualizar</button>
 <button id="toggleAddWeek" class="add-week-btn">+ Añadir semana futura</button>
 </div>
 <div class="add-week-panel" id="addWeekPanel">
@@ -518,7 +522,13 @@ const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbwmJOc_bYMN-urll
 // Cada cuántos segundos comprobamos si alguien más ha hecho cambios.
 // (Google Sheets no avisa en tiempo real como Firebase, así que "preguntamos"
 // cada pocos segundos. Súbelo si notas que va lento o da errores de cuota.)
-const POLL_INTERVAL_MS = 6000;
+// Cada cuánto se comprueban cambios hechos por otras personas.
+const POLL_INTERVAL_MS = 30000;
+// Tras un cambio propio, no se aplican datos remotos durante este tiempo
+// (así no se pisan los datos mientras estás editando).
+const PAUSA_TRAS_EDICION_MS = 60000;
+let ultimaEdicionLocal = 0;
+let envioEnCurso = false;
 
 async function fetchSharedData(){
 const res = await fetch(SHEETS_API_URL, { cache: "no-store" });
@@ -576,6 +586,7 @@ return extraWeeksCache;
 }
 function saveExtraWeeks(list){
 extraWeeksCache = list;
+ultimaEdicionLocal = Date.now();
 pushSharedData({ extraWeeks: list })
 .catch(err => console.error("Error guardando semanas extra en Google Sheets:", err));
 }
@@ -600,10 +611,30 @@ function parseISODate(s){ const [y,m,d] = s.split("-").map(Number); return new D
 
 let assignments = {};
 
+// Los guardados se envían de uno en uno y siempre con el estado más reciente,
+// para que un envío antiguo no llegue tarde y sobrescriba uno nuevo.
+let assignmentsPendiente = false;
 function saveAssignments(data){
-pushSharedData({ assignments: data })
-.then(showSyncFlag)
-.catch(err => console.error("Error guardando trayectos en Google Sheets:", err));
+ultimaEdicionLocal = Date.now();
+assignmentsPendiente = true;
+enviarCola();
+}
+async function enviarCola(){
+if(envioEnCurso || !assignmentsPendiente) return;
+envioEnCurso = true;
+assignmentsPendiente = false;
+try{
+await pushSharedData({ assignments: assignments });
+lastRawSnapshot = ""; // fuerza a aceptar el siguiente estado del servidor cuando toque
+showSyncFlag();
+}catch(err){
+console.error("Error guardando trayectos en Google Sheets:", err);
+assignmentsPendiente = true; // se reintentará en el siguiente cambio o comprobación
+}finally{
+envioEnCurso = false;
+ultimaEdicionLocal = Date.now();
+if(assignmentsPendiente) setTimeout(enviarCola, 1500);
+}
 }
 
 function showSyncFlag(){
@@ -1453,9 +1484,22 @@ renderDiasBlock();
 renderCuadrante();
 }
 
-async function pollSharedData(isFirstLoad){
+// ¿Se está editando ahora mismo? (cambio reciente, envío pendiente o un
+// campo con el foco). En ese caso no se aplican datos remotos.
+function editandoAhora(){
+if(envioEnCurso || assignmentsPendiente) return true;
+if(Date.now() - ultimaEdicionLocal < PAUSA_TRAS_EDICION_MS) return true;
+const a = document.activeElement;
+return !!(a && a.matches && a.matches("main select, main input"));
+}
+
+async function pollSharedData(isFirstLoad, forzar){
+if(!isFirstLoad && !forzar && (document.hidden || editandoAhora())) return;
 try{
+const inicio = Date.now();
 const data = await fetchSharedData();
+// Si mientras llegaba la respuesta has hecho cambios, se descarta.
+if(!isFirstLoad && (ultimaEdicionLocal > inicio || envioEnCurso || assignmentsPendiente)) return;
 const raw = JSON.stringify(data);
 if(raw === lastRawSnapshot && !isFirstLoad) return; // nada ha cambiado, no re-renderizamos
 lastRawSnapshot = raw;
@@ -1532,6 +1576,11 @@ document.getElementById("daysGrid").innerHTML =
 `<div class="empty-msg">Cargando datos compartidos desde Google Sheets…</div>`;
 pollSharedData(true);
 setInterval(() => { if(sheetsReady) pollSharedData(false); }, POLL_INTERVAL_MS);
+document.getElementById("refreshBtn").addEventListener("click", async () => {
+if(envioEnCurso || assignmentsPendiente){ mostrarAviso("Espera un momento: se están guardando tus cambios.", "ok"); return; }
+await pollSharedData(false, true);
+mostrarAviso("Datos actualizados desde Google Sheets.", "ok");
+});
 }
 
 init();
