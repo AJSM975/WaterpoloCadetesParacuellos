@@ -651,13 +651,20 @@ function keyFor(weekLabel, day){ return weekLabel + "::" + day; }
 // Un único trayecto por día (ida y vuelta), con su ubicación, horarios,
 // conductores y deportistas. Se mantiene el formato { trayectos:[...] }
 // para seguir siendo compatible con los datos ya guardados.
+function depsConfigDia(dayName){
+if(!DIAS_TEMPLATE.includes(dayName)) return [];
+const i = deportistasTrayecto(dayName, "ida"), v = deportistasTrayecto(dayName, "vuelta");
+return DEPORTISTAS.filter(n => i.includes(n) || v.includes(n));
+}
 function blankTrayecto(dayObj){
 return {
 locacion: dayObj.locacionDefault,
 horaInicio: dayObj.horaInicioDefault,
 horaFin: dayObj.horaFinDefault,
 conductorIda:"", conductorVuelta:"",
-deportistas: [...dayObj.deportistasDefault]
+// Por defecto, los deportistas configurados para ese día
+deportistas: depsConfigDia(dayObj.day),
+depsEditados: false
 };
 }
 
@@ -677,6 +684,8 @@ if(t.horaFin === undefined) t.horaFin = dayObj.horaFinDefault;
 if(t.conductorIda === undefined) t.conductorIda = "";
 if(t.conductorVuelta === undefined) t.conductorVuelta = "";
 if(!t.deportistas) t.deportistas = [];
+// Si nadie los ha tocado a mano, se muestran los de la configuración
+if(!t.depsEditados) t.deportistas = depsConfigDia(dayObj.day);
 // Ya no se controla el número de plazas
 delete t.plazas; delete t.plazas7; delete t.plazasIda; delete t.plazasVuelta;
 return assignments[k];
@@ -940,7 +949,8 @@ let turno = 0;
 // Asigna la ida y la vuelta de un día. Cada trayecto lo hace una familia
 // cuyo deportista va en ese trayecto (si no hay ninguna, cualquiera).
 // La misma familia no hace ida y vuelta el mismo día si hay alternativa.
-const asignarDia = (depsIda, depsVuelta, semana, peso) => {
+const asignarDia = (depsIda, depsVuelta, semana, peso, fijos) => {
+fijos = fijos || {};
 const largo = peso > 1;
 const elegirPersona = u => u.miembros.length > 1 ? semana.familia[u.nombre] : u.miembros[0];
 const elegirUnidad = (tipo, deps, excluir) => {
@@ -958,9 +968,9 @@ auto[a.u.nombre][tipo] - auto[b.u.nombre][tipo] ||
 a.rot - b.rot);
 return lista[0].u;
 };
-const anotar = (u, tipo) => {
+const anotar = (u, tipo, persona) => {
 auto[u.nombre][tipo]++; auto[u.nombre].carga += peso; if(largo) auto[u.nombre].largos++;
-const p = elegirPersona(u); autoPersona[p]++;
+const p = persona || elegirPersona(u); autoPersona[p] = (autoPersona[p] || 0) + 1;
 return p;
 };
 const res = { ida:"", vuelta:"" };
@@ -969,9 +979,18 @@ const res = { ida:"", vuelta:"" };
 const posibles = deps => UNIDADES.filter(u => u.hijos.some(h => deps.includes(h))).length || UNIDADES.length;
 const orden = [["ida", depsIda], ["vuelta", depsVuelta]];
 if(posibles(depsVuelta) < posibles(depsIda) || (posibles(depsVuelta) === posibles(depsIda) && turno % 2 === 1)) orden.reverse();
+// Los trayectos con conductor fijado en Trayectos van primero: cuentan en el
+// reparto y el otro trayecto del día se elige teniéndolos en cuenta.
+orden.sort((a, b) => (fijos[b[0]] ? 1 : 0) - (fijos[a[0]] ? 1 : 0));
 let primera = null;
 orden.forEach(([tipo, deps]) => {
 if(!deps.length) return;
+const fijo = fijos[tipo] && unidadDe(fijos[tipo]);
+if(fijo){
+res[tipo] = anotar(fijo, tipo, fijos[tipo]);
+primera = fijo;
+return;
+}
 const u = elegirUnidad(tipo, deps, primera);
 res[tipo] = anotar(u, tipo);
 primera = u;
@@ -1025,14 +1044,27 @@ continue;
 const deps = DEPORTISTAS.filter(n => depsIda.includes(n) || depsVuelta.includes(n));
 const item = { date, key, dayName, deps, depsIda, depsVuelta, locacion, ida:"", vuelta:"", editIda:false, editVuelta:false, pasado };
 if(deps.length && UNIDADES.length){
-const r = asignarDia(depsIda, depsVuelta, configSemana(dateKey(mondayOf(date))), pesoDia(dayName));
+// Conductores fijados desde Trayectos para este día: se respetan y cuentan
+// en el reparto, de modo que el resto de días futuros se recalcula.
+const semana = configSemana(dateKey(mondayOf(date)));
+const peso = pesoDia(dayName);
+const fijos = {};
+if(depsIda.length && m.ida && unidadDe(m.ida)) fijos.ida = m.ida;
+if(depsVuelta.length && m.vuelta && unidadDe(m.vuelta)) fijos.vuelta = m.vuelta;
+let sugerido = null;
+if(fijos.ida || fijos.vuelta){
+// Qué habría propuesto el reparto automático (para marcar en amarillo lo que difiere)
+const copiaAuto = JSON.parse(JSON.stringify(auto)), copiaPersona = { ...autoPersona };
+sugerido = asignarDia(depsIda, depsVuelta, semana, peso);
+Object.keys(auto).forEach(k => auto[k] = copiaAuto[k]);
+Object.keys(autoPersona).forEach(k => autoPersona[k] = copiaPersona[k]);
+}
+const r = asignarDia(depsIda, depsVuelta, semana, peso, fijos);
 item.ida = r.ida; item.vuelta = r.vuelta;
+item.editIda = !!(sugerido && fijos.ida && fijos.ida !== sugerido.ida);
+item.editVuelta = !!(sugerido && fijos.vuelta && fijos.vuelta !== sugerido.vuelta);
 previo = [item.ida, item.vuelta].filter(Boolean).map(unidadDe);
 turno++;
-if(m){
-if(depsIda.length && m.ida !== undefined && m.ida !== item.ida){ item.ida = m.ida; item.editIda = true; }
-if(depsVuelta.length && m.vuelta !== undefined && m.vuelta !== item.vuelta){ item.vuelta = m.vuelta; item.editVuelta = true; }
-}
 }
 if(pasado){
 historico[key] = { ida:item.ida, vuelta:item.vuelta, depsIda:item.depsIda, depsVuelta:item.depsVuelta, locacion:item.locacion };
@@ -1295,7 +1327,7 @@ const a2 = getAssignment(week.label, week.days.find(x=>x.day===day));
 let list = a2.trayectos[0].deportistas.slice();
 if(list.includes(name)) list = list.filter(n=>n!==name);
 else list.push(name);
-setAssignment(week.label, day, { deportistas: list });
+setAssignment(week.label, day, { deportistas: list, depsEditados: true });
 trasCambioSemanal(day);
 renderDays();
 });
@@ -1330,7 +1362,6 @@ document.getElementById("nextWeek").disabled = false;
 // deportistas de cada día. Solo afecta a días de hoy en adelante; los días
 // pasados no se actualizan. "Sin asignar" no borra el conductor del cuadrante.
 // Devuelve cuántos trayectos del cuadrante han cambiado.
-let cambiosPendientes = 0;
 function sincronizarSemanaConCuadrante(soloDia){
 if(currentWeekIndex === -1) return { cambios:0, pasados:0 };
 const week = WEEKS[currentWeekIndex];
@@ -1343,13 +1374,13 @@ return cache[mk];
 };
 const huella = it => it ? [it.ida, it.vuelta, it.depsIda.join(), it.depsVuelta.join()].join("|") : "";
 const dias = week.days.filter(d => DIAS_TEMPLATE.includes(d.day) && (!soloDia || d.day === soloDia));
-const antes = {};
+// Foto previa de todos los días futuros de los meses afectados (el cambio
+// de un día puede recalcular el reparto de los siguientes).
 let pasados = 0;
 dias.forEach(d => {
 const fecha = fechaDeDia(week, d.day);
 if(esPasado(fecha)){ pasados++; return; }
 const key = dateKey(fecha);
-antes[key] = huella(cuadranteDe(fecha).dias.find(x => x.key === key));
 const t = getAssignment(week.label, d).trayectos[0];
 const entrada = { ...(manual[key] || {}) };
 // Deportistas: los que se quitan salen de ida y vuelta; los que se añaden van a ambos.
@@ -1357,7 +1388,7 @@ const cfgIda = deportistasTrayecto(d.day, "ida");
 const cfgVuelta = deportistasTrayecto(d.day, "vuelta");
 const union = DEPORTISTAS.filter(n => cfgIda.includes(n) || cfgVuelta.includes(n));
 const sel = DEPORTISTAS.filter(n => (t.deportistas || []).includes(n));
-if(sel.join() === union.join()){
+if(!t.depsEditados || sel.join() === union.join()){
 delete entrada.depsIda; delete entrada.depsVuelta;
 } else {
 entrada.depsIda = sel.filter(n => cfgIda.includes(n) || !union.includes(n));
@@ -1367,19 +1398,33 @@ if(t.conductorIda) entrada.ida = t.conductorIda;
 if(t.conductorVuelta) entrada.vuelta = t.conductorVuelta;
 if(Object.keys(entrada).length) manual[key] = entrada; else delete manual[key];
 });
-let cambios = 0;
-Object.keys(antes).forEach(key => {
-const fecha = parseISODate(key);
-const despues = huella(cuadranteDe(fecha, true).dias.find(x => x.key === key));
-if(despues !== antes[key]) cambios++;
+return { pasados };
+}
+
+// Foto del cuadrante (días futuros de los meses de la semana mostrada) para
+// contar cuántos días cambian entre el último guardado y el actual.
+let fotoPendiente = null;
+function fotoCuadrante(){
+if(currentWeekIndex === -1) return {};
+const week = WEEKS[currentWeekIndex];
+const foto = {}, meses = {};
+week.days.forEach(d => {
+if(!DIAS_TEMPLATE.includes(d.day)) return;
+const f = fechaDeDia(week, d.day);
+meses[f.getFullYear() + "-" + f.getMonth()] = f;
 });
-return { cambios, pasados };
+Object.values(meses).forEach(f => {
+buildCuadrante(f.getFullYear(), f.getMonth()).dias.forEach(x => {
+if(!x.pasado) foto[x.key] = [x.ida, x.vuelta, x.depsIda.join(), x.depsVuelta.join()].join("|");
+});
+});
+return foto;
 }
 
 // Tras cualquier cambio en una tarjeta semanal
 function trasCambioSemanal(day){
-const { cambios } = sincronizarSemanaConCuadrante(day);
-cambiosPendientes += cambios;
+if(!fotoPendiente) fotoPendiente = fotoCuadrante();
+sincronizarSemanaConCuadrante(day);
 saveAssignments(assignments);
 renderCuadrante();
 }
@@ -1394,9 +1439,11 @@ toastTimer = setTimeout(() => el.classList.remove("show"), 4500);
 }
 
 document.getElementById("saveBtn").addEventListener("click", ()=>{
+const antes = fotoPendiente || fotoCuadrante();
 const r = sincronizarSemanaConCuadrante();
-const cambios = cambiosPendientes + r.cambios;
-cambiosPendientes = 0;
+const despues = fotoCuadrante();
+const cambios = Object.keys(despues).filter(k => antes[k] !== undefined && antes[k] !== despues[k]).length;
+fotoPendiente = null;
 saveAssignments(assignments);
 renderCuadrante();
 const extra = (cambios
@@ -1505,7 +1552,10 @@ if(raw === lastRawSnapshot && !isFirstLoad) return; // nada ha cambiado, no re-r
 lastRawSnapshot = raw;
 applyRemoteData(data);
 if(isFirstLoad){
-const initialISO = dateToISOWeekValue(new Date());
+// Sábado y domingo se abre directamente la semana siguiente
+const hoyD = new Date();
+if(hoyD.getDay() === 6 || hoyD.getDay() === 0) hoyD.setDate(hoyD.getDate() + (hoyD.getDay() === 6 ? 2 : 1));
+const initialISO = dateToISOWeekValue(hoyD);
 goToWeek(initialISO);
 sheetsReady = true;
 } else {
