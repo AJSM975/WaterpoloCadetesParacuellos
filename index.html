@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trayectos Equipo Waterpolo</title>
+<style>
+:root{
+--tinta:#1b1f3b;
+--tinta-suave:#4a5070;
+--gris:#8a90a8;
+--borde:#e6e8f2;
+--fondo:#f4f6fb;
+--blanco:#ffffff;
+--naranja:#ff7a1a;
+--naranja-osc:#e8620a;
+--naranja-claro:#fff0e3;
+--rosa:#ff4f7b;
+--verde:#20b46b;
+--verde-osc:#179657;
+--verde-claro:#e4f8ee;
+--amarillo-claro:#fff3b8;
+--cielo:#3fb8f5;
+--cielo-claro:#e6f6fe;
+--radio:18px;
+--sombra:0 6px 20px rgba(27,31,59,.08);
+--sombra-sm:0 2px 8px rgba(27,31,59,.06);
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html{ scroll-behavior:smooth; }
+body{
+margin:0; font-family:"Nunito", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+background:var(--fondo); color:var(--tinta); min-height:100vh;
+}
+button, select, input{ font-family:inherit; }
+
+/* ---------- Cabecera y navegación ---------- */
+.topbar{
+background:linear-gradient(115deg, #8a2d0b 0%, #b8460f 55%, #d2580f 100%);
+color:#fff; padding:18px 20px 54px; position:relative;
+}
+.topbar-inner{ max-width:1280px; margin:0 auto; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.brand h1{ margin:0; font-size:clamp(20px, 3.4vw, 28px); font-weight:900; letter-spacing:-.01em; }
+.brand p{ margin:2px 0 0; font-size:13.5px; opacity:.92; font-weight:600; }
+.nav{ margin-left:auto; display:flex; gap:6px; background:rgba(255,255,255,.18); padding:5px; border-radius:999px; }
+.nav a{
+color:#fff; text-decoration:none; font-weight:800; font-size:14px; padding:8px 16px; border-radius:999px;
+display:flex; align-items:center; gap:6px; transition:.15s;
+}
+.nav a:hover{ background:rgba(255,255,255,.18); }
+.nav a.active{ background:#fff; color:#8a2d0b; }
+.nav svg, .tabbar svg{ width:18px; height:18px; flex:none; }
+
+.container{ max-width:1280px; margin:-36px auto 40px; padding:0 18px; position:relative; }
+.view{ display:none; }
+.view.active{ display:block; animation:aparece .2s ease; }
+@keyframes aparece{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+
+.card{ background:var(--blanco); border-radius:var(--radio); box-shadow:var(--sombra); padding:16px 18px; }
+.view-title{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin:22px 4px 12px; }
+.view-title h2{ margin:0; font-size:20px; font-weight:900; }
+.view > .view-title:first-child{ margin:0 0 14px; background:#fff; border-radius:var(--radio); box-shadow:var(--sombra); padding:14px 18px; }
+.view-title p{ margin:0; font-size:13px; color:var(--tinta-suave); flex-basis:100%; max-width:760px; line-height:1.45; }
+.label-mini{ font-size:12px; font-weight:800; color:var(--gris); text-transform:uppercase; letter-spacing:.05em; }
+
+/* ---------- Vista semanal ---------- */
+.controls{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; }
+.week-nav{ display:flex; align-items:center; gap:8px; }
+.week-nav button{
+width:40px; height:40px; border-radius:50%; border:none; cursor:pointer;
+background:var(--naranja-claro); color:var(--naranja-osc); font-size:20px; font-weight:900; line-height:1;
+}
+.week-nav button:hover{ background:var(--naranja); color:#fff; }
+.week-nav button:disabled{ opacity:.4; cursor:not-allowed; }
+input#weekPicker, input#newWeekPicker, input#monthPicker, .peso-ctrl input{
+padding:9px 14px; border-radius:999px; border:2px solid var(--borde); background:var(--fondo);
+font-size:14.5px; font-weight:800; color:var(--tinta); cursor:pointer; min-height:40px;
+}
+input:focus, select:focus, button:focus-visible{ outline:3px solid rgba(255,122,26,.35); outline-offset:1px; }
+.status-flag, .no-data-flag{ font-size:12.5px; padding:6px 12px; border-radius:999px; font-weight:800; display:none; }
+.status-flag.current, .status-flag.future{ color:var(--verde-osc); background:var(--verde-claro); }
+.status-flag.past{ color:var(--tinta-suave); background:var(--fondo); }
+.no-data-flag{ color:var(--naranja-osc); background:var(--naranja-claro); }
+.add-week-btn, .reset-btn{
+margin-left:auto; padding:9px 16px; border-radius:999px; border:2px dashed var(--naranja);
+background:#fff; color:var(--naranja-osc); font-weight:800; font-size:13.5px; cursor:pointer; min-height:40px;
+}
+.add-week-btn:hover, .reset-btn:hover{ background:var(--naranja-claro); }
+.add-week-panel{ display:none; margin-top:10px; align-items:center; gap:10px; flex-wrap:wrap; }
+.add-week-panel.open{ display:flex; }
+.add-week-confirm, .save-btn, .apply-btn{
+padding:11px 20px; border-radius:999px; border:none; cursor:pointer; min-height:42px;
+background:var(--tinta); color:#fff; font-weight:800; font-size:14px; box-shadow:var(--sombra-sm);
+}
+.add-week-confirm:hover, .save-btn:hover, .apply-btn:hover{ background:#2e3463; }
+.add-week-msg, .apply-msg{ font-size:13px; font-weight:700; }
+.add-week-msg.ok, .apply-msg.ok{ color:var(--verde-osc); }
+.add-week-msg.err, .apply-msg.err{ color:var(--naranja-osc); }
+.apply-msg:empty{ display:none; }
+
+.week-title{ display:flex; align-items:center; gap:10px; margin:20px 4px 12px; flex-wrap:wrap; }
+.week-title .badge{
+background:var(--naranja); color:#fff; font-weight:900; font-size:11.5px;
+padding:5px 12px; border-radius:999px; text-transform:uppercase; letter-spacing:.06em;
+}
+.week-title h2{ margin:0; font-size:18px; font-weight:900; }
+.grid{ display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; }
+.day-card{
+background:var(--blanco); border-radius:var(--radio); box-shadow:var(--sombra); overflow:hidden;
+display:flex; flex-direction:column; min-width:0; border:2px solid transparent;
+}
+.day-card.current-week{ border-color:var(--naranja); }
+.day-card.future-dim{ opacity:.95; }
+.day-head{
+background:var(--amarillo-claro); color:#000; padding:11px 14px; text-align:center;
+border-bottom:3px solid var(--naranja);
+}
+.day-head .day-name{ font-weight:900; font-size:16px; color:#000; }
+.day-body{ padding:14px; display:flex; flex-direction:column; gap:12px; flex:1; }
+.field-label, .deportistas-label{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--gris); font-weight:800; margin-bottom:5px; }
+select.driver-select, select.time-input{
+width:100%; padding:9px 10px; border-radius:12px; border:2px solid var(--borde); background:#fff;
+font-size:13.5px; font-weight:700; color:var(--tinta); cursor:pointer; min-height:40px;
+}
+select.driver-select:disabled, select.time-input:disabled{ background:var(--fondo); color:var(--gris); cursor:not-allowed; }
+.drivers-grid, .time-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.drivers-grid{ grid-template-columns:1fr; gap:6px; }
+@media (max-width:760px){ .drivers-grid{ grid-template-columns:1fr 1fr; } }
+.deportistas-wrap{ margin-top:auto; padding-top:10px; border-top:2px dotted var(--borde); }
+.tag-list{ display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; }
+.tag-chip{
+background:var(--fondo); color:var(--tinta-suave); font-size:12.5px; font-weight:800; text-align:center;
+padding:8px 4px; border-radius:999px; cursor:pointer; border:2px solid transparent; user-select:none;
+transition:.12s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.tag-chip:hover{ border-color:var(--verde); }
+.tag-chip.selected{ background:var(--verde); color:#fff; }
+.tag-chip.locked{ cursor:not-allowed; opacity:.6; }
+.tag-chip.locked:hover{ border-color:transparent; }
+.empty-msg{ grid-column:1 / -1; text-align:center; padding:44px 20px; color:var(--tinta-suave); font-size:15px; font-weight:700; background:#fff; border-radius:var(--radio); box-shadow:var(--sombra); }
+.save-row{ display:flex; align-items:center; justify-content:center; gap:12px; margin-top:20px; }
+.save-btn{ padding:13px 30px; font-size:15px; background:var(--naranja); }
+.save-btn:hover{ background:var(--naranja-osc); }
+.save-msg{ font-size:13px; font-weight:800; color:var(--verde-osc); opacity:0; transition:opacity .2s; }
+.save-msg.show{ opacity:1; }
+.loc-pill{ display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:800; background:var(--fondo); color:var(--tinta-suave); }
+.loc-pill.brains{ background:var(--cielo-claro); color:#0b7bb5; }
+.loc-pill.ciudad{ background:var(--naranja-claro); color:var(--naranja-osc); }
+.loc-pill.sanfer{ background:#f1e8ff; color:#7a3fe0; }
+
+/* ---------- Configuración ---------- */
+.config-grid{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(260px, 340px); gap:16px; align-items:start; }
+.dias-table{ border-collapse:separate; border-spacing:6px 6px; width:100%; }
+.dias-table th{ font-size:12.5px; font-weight:900; color:#000; text-align:center; padding:6px 4px; }
+.dias-table th:first-child{ text-align:left; color:var(--gris); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+.dias-table th:not(:first-child):not(:last-child){ background:var(--amarillo-claro); border-radius:10px; }
+.dias-table th .short{ display:none; }
+.dias-table th:not(:first-child):not(:last-child){ width:14%; }
+.dias-table td{ text-align:center; }
+.dias-table td.name{ text-align:left; font-weight:900; font-size:15px; white-space:nowrap; }
+.dias-table td.name .fam{ display:block; font-size:11.5px; font-weight:700; color:var(--gris); }
+.dias-table td.count{ font-size:12px; color:var(--tinta-suave); font-weight:800; white-space:nowrap; }
+.tray-pair{ display:flex; flex-direction:column; gap:4px; }
+.tray-toggle{
+display:flex; align-items:center; justify-content:center; gap:4px; width:100%; min-height:34px;
+border-radius:10px; border:2px solid var(--borde); background:#fff; color:var(--gris);
+font-weight:900; font-size:12.5px; cursor:pointer; transition:.12s; padding:0 4px;
+}
+.tray-toggle:hover{ border-color:var(--verde); }
+.tray-toggle.on{ background:var(--verde); border-color:var(--verde); color:#fff; }
+.tray-toggle.on:hover{ background:var(--verde-osc); }
+.tray-toggle .arrow{ font-size:13px; }
+.cal-drv-row.vacio{ color:var(--gris); font-weight:800; font-style:italic; }
+.cal-drv-row.vacio span{ padding:2px 4px; font-size:11px; }
+.day-toggle{
+width:100%; min-width:44px; min-height:40px; border-radius:12px; border:2px solid var(--borde);
+background:#fff; color:var(--gris); font-weight:900; font-size:13px; cursor:pointer; transition:.12s;
+}
+.day-toggle:hover{ border-color:var(--verde); }
+.day-toggle.on{ background:var(--verde); border-color:var(--verde); color:#fff; }
+.day-toggle.on:hover{ background:var(--verde-osc); }
+.config-side{ display:flex; flex-direction:column; gap:16px; }
+.config-side h3{ margin:0 0 8px; font-size:15px; font-weight:900; }
+.config-side p{ margin:6px 0 0; font-size:12.5px; color:var(--tinta-suave); line-height:1.45; }
+.peso-ctrl{ display:flex; align-items:center; gap:8px; font-weight:800; font-size:14px; }
+.peso-ctrl input{ width:90px; text-align:center; }
+.familias-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.familias-list li{ display:flex; justify-content:space-between; gap:8px; font-size:13.5px; background:var(--fondo); border-radius:12px; padding:8px 12px; }
+.familias-list b{ font-weight:900; }
+.familias-list span{ color:var(--tinta-suave); font-weight:700; text-align:right; }
+
+/* ---------- Cuadrante ---------- */
+.cuadrante-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.cuadrante-controls .spacer{ flex:1; }
+.cuadrante-controls .reset-btn{ margin-left:0; }
+.apply-msg{ flex-basis:100%; text-align:right; }
+.cal-grid{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)) 104px; gap:8px; }
+.cal-week{ display:contents; }
+.cal-head{ font-size:12.5px; font-weight:900; color:#000; text-align:center; background:var(--amarillo-claro); border-radius:10px; padding:6px 2px; }
+.cal-head.side{ background:var(--naranja-claro); color:var(--naranja-osc); font-size:11px; line-height:1.15; }
+.cal-cell{
+border-radius:14px; padding:8px 9px; min-height:96px; background:#fff; border:2px solid var(--borde);
+display:flex; flex-direction:column; gap:3px; min-width:0;
+}
+.cal-cell.blank{ border:none; background:transparent; }
+.cal-cell.rest{ background:var(--fondo); border-style:dashed; color:var(--gris); }
+.cal-cell.today{ border-color:var(--naranja); box-shadow:0 0 0 3px rgba(255,122,26,.15); }
+.cal-date{ display:flex; justify-content:space-between; align-items:center; gap:4px; }
+.cal-date b{ font-size:16px; font-weight:900; }
+.cal-dow{ display:none; }
+.cal-date .largo{ font-size:10px; font-weight:900; color:var(--naranja-osc); background:var(--naranja-claro); border-radius:999px; padding:1px 6px; margin-left:4px; vertical-align:middle; }
+.cal-cell .loc-pill{ font-size:9.5px; padding:2px 7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-dep{ font-size:10.5px; font-weight:800; color:var(--verde-osc); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-drv-row{ display:flex; align-items:center; gap:3px; font-size:11px; color:var(--gris); font-weight:900; min-width:0; }
+.cal-select{
+flex:1; min-width:0; border:2px solid transparent; border-radius:8px; background:var(--fondo);
+font-size:11.5px; font-weight:800; color:var(--tinta); padding:2px 2px; cursor:pointer;
+}
+.cal-select:hover{ border-color:var(--borde); }
+.cal-drv-row.edited .cal-select{ background:var(--amarillo-claro); color:#6b4f00; }
+.cal-drv-row.sin-hijo .cal-select{ text-decoration:underline dotted var(--rosa); }
+.cal-rest-msg{ font-size:12px; font-weight:800; }
+.cal-side{ display:flex; flex-direction:column; justify-content:center; gap:4px; }
+.cal-side .side-label{ display:none; }
+.sem-select{
+width:100%; padding:8px 6px; border-radius:12px; border:2px solid var(--naranja);
+background:var(--naranja-claro); color:var(--naranja-osc); font-size:12.5px; font-weight:900; cursor:pointer; min-height:40px;
+}
+.reparto{ margin-top:16px; overflow-x:auto; }
+.pie-table{ border-collapse:separate; border-spacing:0; font-size:13px; min-width:100%; }
+.pie-table th{ font-size:13px; font-weight:900; color:var(--tinta); padding:8px 12px; text-align:center; white-space:nowrap; background:var(--naranja-claro); }
+.pie-table th:first-child{ border-radius:12px 0 0 12px; }
+.pie-table th:last-child{ border-radius:0 12px 12px 0; }
+.pie-table th span{ display:block; font-size:10.5px; color:var(--naranja-osc); font-weight:800; }
+.pie-table td{ padding:7px 12px; text-align:center; color:var(--tinta-suave); font-weight:700; border-bottom:1px solid var(--borde); }
+.pie-table td:first-child{ text-align:left; color:var(--gris); font-weight:800; white-space:nowrap; }
+.pie-table tr.tot td{ font-weight:900; color:var(--tinta); border-bottom:none; font-size:14px; }
+
+/* ---------- Aviso ---------- */
+.toast{
+position:fixed; left:50%; bottom:24px; transform:translate(-50%, 20px); z-index:100;
+background:var(--tinta); color:#fff; padding:12px 18px; border-radius:16px; box-shadow:0 10px 30px rgba(27,31,59,.3);
+font-size:14px; font-weight:700; max-width:min(560px, calc(100vw - 24px)); width:max-content;
+opacity:0; pointer-events:none; transition:.25s; line-height:1.4;
+}
+.toast.show{ opacity:1; transform:translate(-50%, 0); pointer-events:auto; }
+.toast.ok::before{ content:"✓"; display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:var(--verde); color:#fff; font-size:12px; font-weight:900; margin-right:8px; vertical-align:-4px; }
+.toast b{ font-weight:900; }
+.toast a{ color:#ffd9b8; font-weight:900; margin-left:6px; white-space:nowrap; }
+
+/* ---------- Barra inferior (móvil) ---------- */
+.tabbar{ display:none; }
+
+@media (max-width:1100px){ .grid{ grid-template-columns:repeat(3, 1fr); } }
+@media (max-width:900px){ .config-grid{ grid-template-columns:1fr; } }
+@media (max-width:760px){
+body{ padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
+.topbar{ padding:16px 16px 46px; }
+.brand p{ display:none; }
+.nav{ display:none; }
+.container{ padding:0 12px; margin-top:-30px; }
+.card{ padding:14px; border-radius:16px; }
+.tabbar{
+display:flex; position:fixed; left:0; right:0; bottom:0; z-index:50; background:#fff;
+box-shadow:0 -4px 18px rgba(27,31,59,.10); padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+.tabbar a{
+flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 0;
+text-decoration:none; color:var(--gris); font-size:11.5px; font-weight:800; border-radius:14px;
+}
+.tabbar svg{ width:22px; height:22px; }
+.tabbar a.active{ color:var(--naranja-osc); background:var(--naranja-claro); }
+.controls{ gap:10px; }
+.week-nav{ flex:1; }
+input#weekPicker{ flex:1; min-width:0; }
+.add-week-btn{ margin-left:0; width:100%; }
+.toast{ bottom:calc(86px + env(safe-area-inset-bottom)); font-size:13px; }
+#view-semana > .card{ padding:10px 12px; }
+#view-semana .controls > .label-mini{ display:none; }
+.week-nav button{ width:36px; height:36px; font-size:18px; }
+input#weekPicker{ min-height:36px; padding:6px 12px; font-size:14px; }
+.status-flag, .no-data-flag{ font-size:11px; padding:4px 10px; }
+.add-week-btn{ min-height:34px; padding:6px 12px; font-size:12.5px; }
+.week-title{ margin:12px 4px 8px; }
+.grid{ grid-template-columns:1fr; gap:8px; }
+/* Tarjetas de día compactas */
+.day-card{ border-radius:14px; border-width:1.5px; }
+.day-head{ text-align:left; padding:5px 12px; border-bottom-width:2px; }
+.day-head .day-name{ font-size:14px; }
+.day-body{ padding:8px 10px 10px; gap:6px; display:grid; grid-template-columns:1fr 1fr; }
+.day-body > div:nth-child(3), .day-body > .deportistas-wrap{ grid-column:1 / -1; }
+.day-body > div:nth-child(1){ grid-column:1 / 2; }
+.day-body > .time-grid{ grid-column:2 / 3; }
+.field-label, .deportistas-label{ font-size:9.5px; margin-bottom:2px; }
+.field-label.driver-label{ font-size:9.5px; }
+select.driver-select, select.time-input{ min-height:34px; padding:5px 6px; font-size:12.5px; border-radius:10px; border-width:1.5px; }
+.time-grid{ gap:4px; }
+.drivers-grid{ gap:6px; }
+.deportistas-wrap{ padding-top:6px; }
+.tag-list{ gap:5px; }
+.week-title .badge{ display:none; }
+.week-title h2{ font-size:15px; }
+.tag-chip{ font-size:12.5px; padding:6px 4px; }
+.save-row{ position:sticky; bottom:calc(84px + env(safe-area-inset-bottom)); z-index:5; }
+.save-btn{ width:100%; box-shadow:0 8px 20px rgba(255,122,26,.35); }
+.dias-table{ border-spacing:4px 6px; }
+.dias-table th .full{ display:none; }
+.dias-table th .short{ display:inline; }
+.dias-table td.count{ display:none; }
+.tray-toggle .txt{ display:none; }
+.tray-toggle{ min-height:38px; font-size:15px; }
+.tray-toggle .arrow{ font-size:16px; }
+.dias-table td.name{ font-size:14px; }
+.day-toggle{ min-width:0; font-size:12px; padding:0 2px; }
+.cuadrante-controls .spacer{ display:none; }
+.apply-btn, .cuadrante-controls .reset-btn{ width:100%; }
+input#monthPicker{ flex:1; }
+.apply-msg{ text-align:left; }
+/* Cuadrante como lista por semanas */
+.cal-grid{ display:flex; flex-direction:column; gap:14px; }
+.cal-head{ display:none; }
+.cal-week{ display:flex; flex-direction:column; gap:6px; }
+.cal-side{ order:-1; flex-direction:row; align-items:center; justify-content:space-between; gap:10px; padding:2px 2px 4px; border-bottom:2px solid var(--naranja-claro); }
+.cal-side .side-label{ display:block; font-size:13px; font-weight:900; }
+.cal-side .side-label small{ display:block; font-size:11px; color:var(--gris); font-weight:700; }
+.sem-select{ width:auto; min-width:120px; }
+.cal-cell.blank{ display:none; }
+.cal-cell{ min-height:0; display:grid; grid-template-columns:50px minmax(0,1fr) minmax(0,1fr); grid-template-areas:"fecha ida vuelta" "fecha dep dep"; align-items:center; gap:4px 8px; padding:10px 12px; }
+.cal-cell.rest{ grid-template-columns:50px 1fr; grid-template-areas:"fecha msg"; padding:8px 12px; }
+.cal-cell.rest .cal-rest-msg{ grid-area:msg; }
+.cal-date{ grid-area:fecha; flex-direction:column; align-items:flex-start; justify-content:center; gap:0; }
+.cal-dow{ display:block; font-size:11px; font-weight:900; color:var(--gris); text-transform:uppercase; }
+.cal-date b{ font-size:20px; line-height:1.1; }
+.cal-date .largo{ margin-left:0; display:inline-block; margin-top:2px; }
+.cal-cell .loc-pill{ display:none; }
+.cal-dep{ grid-area:dep; font-size:12px; }
+.cal-drv-row.ida{ grid-area:ida; }
+.cal-drv-row.vuelta{ grid-area:vuelta; }
+.cal-drv-row{ font-size:13px; }
+.cal-select{ font-size:13.5px; padding:8px 0; min-height:40px; }
+.cal-rest-msg{ font-size:13px; }
+}
+@media (max-width:360px){
+.cal-select{ font-size:12.5px; }
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<header class="topbar">
+<div class="topbar-inner">
+<div class="brand">
+<h1>Trayectos Waterpolo</h1>
+<p>Quién lleva a quién, cada día de entreno.</p>
+</div>
+<nav class="nav" aria-label="Secciones">
+<a href="#semana" data-view="semana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M6 17l1.5-5h9L18 17M8 12l1-3h6l1 3"/><circle cx="8" cy="18.5" r="1.5"/><circle cx="16" cy="18.5" r="1.5"/></svg>Trayectos</a>
+<a href="#cuadrante" data-view="cuadrante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Cuadrante</a>
+<a href="#configuracion" data-view="configuracion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Configuración</a>
+</nav>
+</div>
+</header>
+
+<main class="container">
+
+<section class="view" id="view-semana" data-view="semana">
+<div class="card">
+<div class="controls">
+<span class="label-mini">Semana</span>
+<div class="week-nav">
+<button id="prevWeek" title="Semana anterior" aria-label="Semana anterior">‹</button>
+<input type="week" id="weekPicker">
+<button id="nextWeek" title="Semana siguiente" aria-label="Semana siguiente">›</button>
+</div>
+<span class="no-data-flag" id="noDataFlag">Sin trayectos registrados para esta semana</span>
+<span class="status-flag" id="statusFlag"></span>
+<span class="status-flag current" id="syncFlag" style="display:none;">Sincronizado</span>
+<button id="toggleAddWeek" class="add-week-btn">+ Añadir semana futura</button>
+</div>
+<div class="add-week-panel" id="addWeekPanel">
+<span class="label-mini">Nueva semana</span>
+<input type="week" id="newWeekPicker">
+<button id="createWeekBtn" class="add-week-confirm">Crear trayectos</button>
+<span id="addWeekMsg" class="add-week-msg"></span>
+</div>
+</div>
+<div class="week-title">
+<span class="badge">Semana</span>
+<h2 id="weekLabel"></h2>
+</div>
+<div class="grid" id="daysGrid"></div>
+<div class="save-row">
+<button id="saveBtn" class="save-btn">Guardar cambios</button>
+<span id="saveMsg" class="save-msg"></span>
+</div>
+</section>
+
+<section class="view" id="view-cuadrante" data-view="cuadrante">
+<div class="view-title">
+<h2>Cuadrante del mes</h2>
+<p>Reparto equitativo de idas (↗) y vueltas (↙) según los días de entreno. Martes y jueves cuentan más por ser trayectos largos. Puedes cambiar cualquier conductor: los cambios se marcan en amarillo.</p>
+</div>
+<div class="card">
+<div class="cuadrante-controls">
+<span class="label-mini">Mes</span>
+<input type="month" id="monthPicker">
+<span class="spacer"></span>
+<button id="resetCuadranteBtn" class="reset-btn" style="display:none;">Volver al reparto automático</button>
+<button id="applyCuadranteBtn" class="apply-btn">Aplicar a los trayectos semanales</button>
+<span id="applyMsg" class="apply-msg"></span>
+</div>
+<div class="cal-grid" id="calGrid"></div>
+<div class="reparto" id="repartoGrid"></div>
+</div>
+</section>
+
+<section class="view" id="view-configuracion" data-view="configuracion">
+<div class="view-title">
+<h2>Configuración</h2>
+<p>Marca, para cada día, si el deportista hace la ida (↗), la vuelta (↙) o ambas. El cuadrante solo asigna conductor a los trayectos en los que va alguien.</p>
+</div>
+<div class="config-grid">
+<div class="card" style="overflow-x:auto;">
+<table class="dias-table" id="diasTable"></table>
+</div>
+<div class="config-side">
+<div class="card">
+<h3>Trayectos largos</h3>
+<label class="peso-ctrl" for="pesoLargo">Martes y jueves ×
+<input type="number" id="pesoLargo" min="1" max="5" step="0.25" inputmode="decimal"></label>
+<p>Cuánto cuenta un trayecto de martes o jueves frente a uno normal en el reparto.</p>
+</div>
+<div class="card">
+<h3>Familias</h3>
+<ul class="familias-list" id="familiasList"></ul>
+<p>Cada día conducen las familias cuyo deportista entrena. Alberto y Mónica cuentan como una unidad y se turnan por semanas desde el cuadrante.</p>
+</div>
+</div>
+</div>
+</section>
+
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="tabbar" aria-label="Secciones">
+<a href="#semana" data-view="semana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M6 17l1.5-5h9L18 17M8 12l1-3h6l1 3"/><circle cx="8" cy="18.5" r="1.5"/><circle cx="16" cy="18.5" r="1.5"/></svg>Trayectos</a>
+<a href="#cuadrante" data-view="cuadrante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Cuadrante</a>
+<a href="#configuracion" data-view="configuracion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ajustes</a>
+</nav>
+<script>
+const WEEKS = [
+{
+start: "2026-09-21",
+label: "Semana del 21 al 25 de Septiembre 2026",
+days: [
+{ day: "Lunes", locacionDefault: "Brains", horaInicioDefault: "19:45", horaFinDefault: "21:15", deportistasDefault: [] },
+{ day: "Martes", locacionDefault: "Ciudad Escolar", horaInicioDefault: "19:45", horaFinDefault: "21:15", deportistasDefault: [] },
+{ day: "Miércoles", locacionDefault: "Brains", horaInicioDefault: "19:45", horaFinDefault: "21:15", deportistasDefault: [] },
+{ day: "Jueves", locacionDefault: "Ciudad Escolar", horaInicioDefault: "19:45", horaFinDefault: "21:15", deportistasDefault: [] },
+{ day: "Viernes", locacionDefault: "Brains", horaInicioDefault: "19:45", horaFinDefault: "21:15", deportistasDefault: [] }
+]
+}
+];
+
+const CONDUCTORES = ["María José","Alberto","Mónica","José Luis"];
+const UBICACIONES = ["Brains","Ciudad Escolar","San Fernando"];
+const DEPORTISTAS = ["Jorge","Dani","Alvaro"];
+
+// ============ GOOGLE SHEETS (vía Google Apps Script) ============
+// 1) Crea una Google Sheet, ve a Extensiones -> Apps Script.
+// 2) Pega el código que te di en "AppsScript_CodigoGS.txt".
+// 3) Implementa como "Aplicación web", acceso "Cualquier usuario".
+// 4) Pega aquí la URL que termina en ".../exec":
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbwmJOc_bYMN-urllYYiwdynLbB8obnDnRK_EHxm1E9QpEwM7GKeKFpOuvLyUnE9sEZKCw/exec";
+
+// Cada cuántos segundos comprobamos si alguien más ha hecho cambios.
+// (Google Sheets no avisa en tiempo real como Firebase, así que "preguntamos"
+// cada pocos segundos. Súbelo si notas que va lento o da errores de cuota.)
+const POLL_INTERVAL_MS = 6000;
+
+async function fetchSharedData(){
+const res = await fetch(SHEETS_API_URL, { cache: "no-store" });
+if(!res.ok) throw new Error("HTTP " + res.status);
+return res.json();
+}
+
+async function pushSharedData(partial){
+// Content-Type "text/plain" evita que el navegador dispare una petición
+// OPTIONS de pre-vuelo (CORS) que Apps Script no sabe responder.
+await fetch(SHEETS_API_URL, {
+method: "POST",
+headers: { "Content-Type": "text/plain;charset=utf-8" },
+body: JSON.stringify(partial)
+});
+}
+// ===================================
+
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const DIAS_TEMPLATE = ["Lunes","Martes","Miércoles","Jueves","Viernes"];
+
+function buildDefaultDays(){
+const patron = {
+"Lunes": "Brains", "Martes": "Ciudad Escolar", "Miércoles": "Brains",
+"Jueves": "Ciudad Escolar", "Viernes": "Brains"
+};
+return DIAS_TEMPLATE.map(day => ({
+day, locacionDefault: patron[day], horaInicioDefault: "19:45", horaFinDefault: "21:15", deportistasDefault: []
+}));
+}
+
+function formatWeekLabel(mondayDate){
+const friday = new Date(mondayDate);
+friday.setDate(mondayDate.getDate() + 4);
+if(mondayDate.getMonth() === friday.getMonth()){
+return `Semana del ${mondayDate.getDate()} al ${friday.getDate()} de ${MESES[mondayDate.getMonth()]} ${friday.getFullYear()}`;
+}
+return `Semana del ${mondayDate.getDate()} de ${MESES[mondayDate.getMonth()]} al ${friday.getDate()} de ${MESES[friday.getMonth()]} de ${friday.getFullYear()}`;
+}
+
+function isoWeekValueToMonday(isoValue){
+const [yr, wk] = isoValue.split("-W").map(Number);
+const simple = new Date(Date.UTC(yr, 0, 1 + (wk-1)*7));
+const dow = simple.getUTCDay();
+const monday = new Date(simple);
+if(dow <= 4) monday.setUTCDate(simple.getUTCDate() - dow + 1);
+else monday.setUTCDate(simple.getUTCDate() + 8 - dow);
+return new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate());
+}
+
+// Cache local en memoria; la fuente de verdad vive en la Google Sheet.
+let extraWeeksCache = [];
+function loadExtraWeeks(){
+return extraWeeksCache;
+}
+function saveExtraWeeks(list){
+extraWeeksCache = list;
+pushSharedData({ extraWeeks: list })
+.catch(err => console.error("Error guardando semanas extra en Google Sheets:", err));
+}
+
+function locClass(loc){
+if(loc === "Brains") return "brains";
+if(loc === "Ciudad Escolar") return "ciudad";
+if(loc === "San Fernando") return "sanfer";
+return "";
+}
+
+function dateToISOWeekValue(d){
+const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+const dayNum = (date.getUTCDay() + 6) % 7;
+date.setUTCDate(date.getUTCDate() - dayNum + 3);
+const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+const week = 1 + Math.round(((date - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+return `${date.getUTCFullYear()}-W${String(week).padStart(2,"0")}`;
+}
+
+function parseISODate(s){ const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
+
+let assignments = {};
+
+function saveAssignments(data){
+pushSharedData({ assignments: data })
+.then(showSyncFlag)
+.catch(err => console.error("Error guardando trayectos en Google Sheets:", err));
+}
+
+function showSyncFlag(){
+const el = document.getElementById("syncFlag");
+if(!el) return;
+el.style.display = "inline-block";
+el.textContent = "Sincronizado";
+clearTimeout(window._syncFlagTimeout);
+window._syncFlagTimeout = setTimeout(()=> el.style.display = "none", 1800);
+}
+
+function keyFor(weekLabel, day){ return weekLabel + "::" + day; }
+
+// Un único trayecto por día (ida y vuelta), con su ubicación, horarios,
+// conductores y deportistas. Se mantiene el formato { trayectos:[...] }
+// para seguir siendo compatible con los datos ya guardados.
+function blankTrayecto(dayObj){
+return {
+locacion: dayObj.locacionDefault,
+horaInicio: dayObj.horaInicioDefault,
+horaFin: dayObj.horaFinDefault,
+conductorIda:"", conductorVuelta:"",
+deportistas: [...dayObj.deportistasDefault]
+};
+}
+
+function getAssignment(weekLabel, dayObj){
+const k = keyFor(weekLabel, dayObj.day);
+if(!assignments[k] || !assignments[k].trayectos || !assignments[k].trayectos.length){
+const old = assignments[k] && !assignments[k].trayectos ? assignments[k] : null; // formato antiguo plano
+const base = blankTrayecto(dayObj);
+assignments[k] = { trayectos: [ old ? { ...base, ...old } : base ] };
+}
+// Solo se trabaja con un trayecto por día: se descartan los 2º trayectos antiguos.
+if(assignments[k].trayectos.length > 1) assignments[k].trayectos.length = 1;
+const t = assignments[k].trayectos[0];
+if(t.locacion === undefined) t.locacion = dayObj.locacionDefault;
+if(t.horaInicio === undefined) t.horaInicio = dayObj.horaInicioDefault;
+if(t.horaFin === undefined) t.horaFin = dayObj.horaFinDefault;
+if(t.conductorIda === undefined) t.conductorIda = "";
+if(t.conductorVuelta === undefined) t.conductorVuelta = "";
+if(!t.deportistas) t.deportistas = [];
+// Ya no se controla el número de plazas
+delete t.plazas; delete t.plazas7; delete t.plazasIda; delete t.plazasVuelta;
+return assignments[k];
+}
+
+function setAssignment(weekLabel, day, patch){
+const k = keyFor(weekLabel, day);
+if(!assignments[k] || !assignments[k].trayectos) assignments[k] = { trayectos: [{}] };
+assignments[k].trayectos[0] = { ...assignments[k].trayectos[0], ...patch };
+saveAssignments(assignments);
+}
+
+// ============ DÍAS DE CADA DEPORTISTA ============
+// Se guarda dentro de "assignments" (clave especial) para que viaje a la
+// Google Sheet sin tener que modificar el Apps Script.
+const CONFIG_KEY = "__config__";
+// Configuración por trayecto: { Jorge: { Lunes:{ida:true, vuelta:true}, ... } }
+// Se migra automáticamente desde el formato anterior (lista de días).
+function getTrayectosDeportistas(){
+if(!assignments[CONFIG_KEY]) assignments[CONFIG_KEY] = {};
+const cfg = assignments[CONFIG_KEY];
+if(!cfg.trayectosDeportistas || typeof cfg.trayectosDeportistas !== "object") cfg.trayectosDeportistas = {};
+const td = cfg.trayectosDeportistas;
+const antiguo = cfg.diasDeportistas || {};
+DEPORTISTAS.forEach(n => {
+if(!td[n] || typeof td[n] !== "object"){
+const dias = Array.isArray(antiguo[n]) ? antiguo[n] : DIAS_TEMPLATE;
+td[n] = {};
+DIAS_TEMPLATE.forEach(d => td[n][d] = { ida: dias.includes(d), vuelta: dias.includes(d) });
+}
+DIAS_TEMPLATE.forEach(d => {
+const v = td[n][d] || {};
+td[n][d] = { ida: !!v.ida, vuelta: !!v.vuelta };
+});
+});
+return td;
+}
+// Deportistas que hacen la ida / la vuelta un día de la semana
+function deportistasTrayecto(dayName, tipo){
+const td = getTrayectosDeportistas();
+return DEPORTISTAS.filter(n => td[n][dayName][tipo]);
+}
+
+function renderDiasBlock(){
+const td = getTrayectosDeportistas();
+const table = document.getElementById("diasTable");
+const boton = (n, d, tipo) => {
+const on = td[n][d][tipo];
+const txt = tipo === "ida" ? "Ida" : "Vuelta";
+return `<button class="tray-toggle ${tipo} ${on ? "on" : ""}" data-name="${n}" data-day="${d}" data-tipo="${tipo}" aria-pressed="${on}" aria-label="${n}, ${d}, ${txt}" title="${txt}"><span class="arrow">${tipo === "ida" ? "↗" : "↙"}</span><span class="txt">${txt}</span></button>`;
+};
+table.innerHTML = `
+<tr><th>Deportista</th>${DIAS_TEMPLATE.map(d=>`<th><span class="full">${d}</span><span class="short">${d === "Miércoles" ? "X" : d[0]}</span></th>`).join("")}<th></th></tr>
+${DEPORTISTAS.map(n => {
+const total = DIAS_TEMPLATE.reduce((x, d) => x + (td[n][d].ida ? 1 : 0) + (td[n][d].vuelta ? 1 : 0), 0);
+return `
+<tr>
+<td class="name">${n}<span class="fam">${(FAMILIA_DEPORTISTA[n] || []).join(" y ")}</span></td>
+${DIAS_TEMPLATE.map(d => `<td><div class="tray-pair">${boton(n, d, "ida")}${boton(n, d, "vuelta")}</div></td>`).join("")}
+<td class="count">${total} trayecto${total === 1 ? "" : "s"}/semana</td>
+</tr>`;
+}).join("")}
+`;
+table.querySelectorAll(".tray-toggle").forEach(btn => {
+btn.addEventListener("click", () => {
+const v = td[btn.dataset.name][btn.dataset.day];
+v[btn.dataset.tipo] = !v[btn.dataset.tipo];
+saveAssignments(assignments);
+renderDiasBlock();
+renderCuadrante();
+});
+});
+}
+
+// ============ CUADRANTE MENSUAL ============
+function dateKey(d){ return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+function mondayOf(d){ const m = new Date(d); m.setDate(d.getDate() - ((d.getDay() + 6) % 7)); m.setHours(0,0,0,0); return m; }
+const PATRON_UBICACION = { "Lunes":"Brains", "Martes":"Ciudad Escolar", "Miércoles":"Brains", "Jueves":"Ciudad Escolar", "Viernes":"Brains" };
+
+// Conductores que pertenecen a la misma unidad familiar: a efectos del
+// reparto cuentan como una sola unidad (y dentro de ella se alternan).
+const FAMILIAS = [["Alberto","Mónica"]];
+// Relación deportista → conductor/es de su familia.
+const FAMILIA_DEPORTISTA = { "Jorge": ["José Luis"], "Dani": ["María José"], "Alvaro": ["Alberto","Mónica"] };
+const UNIDADES = (() => {
+const vistos = new Set(), res = [];
+CONDUCTORES.forEach(c => {
+if(vistos.has(c)) return;
+const fam = FAMILIAS.find(f => f.includes(c));
+const miembros = fam ? CONDUCTORES.filter(x => fam.includes(x)) : [c];
+miembros.forEach(x => vistos.add(x));
+const hijos = DEPORTISTAS.filter(d => (FAMILIA_DEPORTISTA[d] || []).some(x => miembros.includes(x)));
+res.push({ nombre: miembros.join(" + "), miembros, hijos });
+});
+return res;
+})();
+function unidadDe(c){ return UNIDADES.find(u => u.miembros.includes(c)); }
+
+// Conductores por semana: { "2026-09-28": { familia: { "Alberto + Mónica": "Alberto" }, fuera: ["José Luis"] } }
+// - familia: qué miembro de cada unidad familiar conduce esa semana.
+// - fuera: unidades que no están disponibles esa semana.
+function getConductoresSemana(){
+if(!assignments[CONFIG_KEY]) assignments[CONFIG_KEY] = {};
+const cfg = assignments[CONFIG_KEY];
+if(!cfg.conductoresSemana || typeof cfg.conductoresSemana !== "object") cfg.conductoresSemana = {};
+return cfg.conductoresSemana;
+}
+// Por defecto los miembros de una familia se alternan por semanas (según el nº de semana ISO).
+function miembroPorDefecto(u, weekStart){
+const n = Number(dateToISOWeekValue(parseISODate(weekStart)).split("-W")[1]);
+return u.miembros[n % u.miembros.length];
+}
+function configSemana(weekStart){
+const cs = getConductoresSemana()[weekStart] || {};
+const familia = {};
+UNIDADES.filter(u => u.miembros.length > 1).forEach(u => {
+const elegido = cs.familia && cs.familia[u.nombre];
+familia[u.nombre] = u.miembros.includes(elegido) ? elegido : miembroPorDefecto(u, weekStart);
+});
+return { familia, fuera: [] };
+}
+function setConfigSemana(weekStart, patch){
+const all = getConductoresSemana();
+all[weekStart] = { ...(all[weekStart] || {}), ...patch };
+saveAssignments(assignments);
+}
+
+// Martes y jueves son trayectos más largos: cuentan más en el reparto.
+const DIAS_LARGOS = ["Martes","Jueves"];
+const PESO_LARGO_DEFECTO = 1.5;
+function getPesoLargo(){
+const cfg = assignments[CONFIG_KEY] || {};
+const p = Number(cfg.pesoLargo);
+return p >= 1 && p <= 5 ? p : PESO_LARGO_DEFECTO;
+}
+function pesoDia(dayName){ return DIAS_LARGOS.includes(dayName) ? getPesoLargo() : 1; }
+function fmtNum(n){ return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0$/, "").replace(".", ","); }
+
+// Cambios manuales del cuadrante: { "2026-10-05": { ida:"...", vuelta:"..." } }
+function getCuadranteManual(){
+if(!assignments[CONFIG_KEY]) assignments[CONFIG_KEY] = {};
+const cfg = assignments[CONFIG_KEY];
+if(!cfg.cuadranteManual || typeof cfg.cuadranteManual !== "object") cfg.cuadranteManual = {};
+return cfg.cuadranteManual;
+}
+
+// Genera los días laborables del mes con los deportistas que van y reparte
+// los trayectos: cada ida y cada vuelta cuenta como un trayecto. Solo
+// conducen las familias cuyo deportista entrena ese día; entre ellas se elige
+// la unidad (conductor o familia) con menos trayectos acumulados; dentro de una
+// familia, el miembro que lleve menos. La misma unidad nunca hace ida y
+// vuelta el mismo día y, si se puede, tampoco repite del día anterior.
+// Los cambios manuales se respetan y no alteran el resto de días.
+function buildCuadrante(year, month){
+const dias = [];
+const auto = {};
+UNIDADES.forEach(u => auto[u.nombre] = { ida:0, vuelta:0, carga:0, largos:0 });
+const autoPersona = {};
+CONDUCTORES.forEach(c => autoPersona[c] = 0);
+let previo = [];
+let turno = 0;
+// Elige las dos unidades que conducen ese día (o una, si solo hay una
+// familia con deportista ese día) y decide quién hace la ida y quién la
+// vuelta para que cada unidad tenga un número parecido de idas y vueltas.
+// Asigna la ida y la vuelta de un día. Cada trayecto lo hace una familia
+// cuyo deportista va en ese trayecto (si no hay ninguna, cualquiera).
+// La misma familia no hace ida y vuelta el mismo día si hay alternativa.
+const asignarDia = (depsIda, depsVuelta, semana, peso) => {
+const largo = peso > 1;
+const elegirPersona = u => u.miembros.length > 1 ? semana.familia[u.nombre] : u.miembros[0];
+const elegirUnidad = (tipo, deps, excluir) => {
+let lista = UNIDADES.map((u, i) => ({ u, rot:(i - turno + UNIDADES.length) % UNIDADES.length }));
+const disponibles = lista.filter(o => !semana.fuera.includes(o.u.nombre));
+if(disponibles.length) lista = disponibles;
+const conHijo = lista.filter(o => o.u.hijos.some(h => deps.includes(h)));
+if(conHijo.length) lista = conHijo;
+if(excluir && lista.length > 1) lista = lista.filter(o => o.u !== excluir);
+lista.sort((a, b) =>
+auto[a.u.nombre].carga - auto[b.u.nombre].carga ||
+(largo ? auto[a.u.nombre].largos - auto[b.u.nombre].largos : 0) ||
+auto[a.u.nombre][tipo] - auto[b.u.nombre][tipo] ||
+(previo.includes(a.u) ? 1 : 0) - (previo.includes(b.u) ? 1 : 0) ||
+a.rot - b.rot);
+return lista[0].u;
+};
+const anotar = (u, tipo) => {
+auto[u.nombre][tipo]++; auto[u.nombre].carga += peso; if(largo) auto[u.nombre].largos++;
+const p = elegirPersona(u); autoPersona[p]++;
+return p;
+};
+const res = { ida:"", vuelta:"" };
+// Primero el trayecto con menos familias posibles (más restringido);
+// a igualdad, se alterna para repartir idas y vueltas.
+const posibles = deps => UNIDADES.filter(u => u.hijos.some(h => deps.includes(h))).length || UNIDADES.length;
+const orden = [["ida", depsIda], ["vuelta", depsVuelta]];
+if(posibles(depsVuelta) < posibles(depsIda) || (posibles(depsVuelta) === posibles(depsIda) && turno % 2 === 1)) orden.reverse();
+let primera = null;
+orden.forEach(([tipo, deps]) => {
+if(!deps.length) return;
+const u = elegirUnidad(tipo, deps, primera);
+res[tipo] = anotar(u, tipo);
+primera = u;
+});
+return res;
+};
+const manual = getCuadranteManual();
+const last = new Date(year, month + 1, 0).getDate();
+for(let dnum = 1; dnum <= last; dnum++){
+const date = new Date(year, month, dnum);
+const dow = date.getDay();
+if(dow === 0 || dow === 6) continue;
+const dayName = DIAS_TEMPLATE[dow - 1];
+const depsIda = deportistasTrayecto(dayName, "ida");
+const depsVuelta = deportistasTrayecto(dayName, "vuelta");
+const deps = DEPORTISTAS.filter(n => depsIda.includes(n) || depsVuelta.includes(n));
+const week = WEEKS.find(w => w.start === dateKey(mondayOf(date)));
+const saved = week ? assignments[keyFor(week.label, dayName)] : null;
+const locacion = (saved && saved.trayectos && saved.trayectos[0] && saved.trayectos[0].locacion) || PATRON_UBICACION[dayName];
+const item = { date, key: dateKey(date), dayName, deps, depsIda, depsVuelta, locacion, ida:"", vuelta:"", editIda:false, editVuelta:false };
+if(deps.length && UNIDADES.length){
+const r = asignarDia(depsIda, depsVuelta, configSemana(dateKey(mondayOf(date))), pesoDia(dayName));
+item.ida = r.ida; item.vuelta = r.vuelta;
+previo = [item.ida, item.vuelta].filter(Boolean).map(unidadDe);
+turno++;
+const m = manual[item.key];
+if(m){
+if(depsIda.length && m.ida !== undefined && m.ida !== item.ida){ item.ida = m.ida; item.editIda = true; }
+if(depsVuelta.length && m.vuelta !== undefined && m.vuelta !== item.vuelta){ item.vuelta = m.vuelta; item.editVuelta = true; }
+}
+}
+dias.push(item);
+}
+// Recuento final (incluye los cambios manuales)
+const stats = {};
+CONDUCTORES.forEach(c => stats[c] = { ida:0, vuelta:0, total:0, largos:0, carga:0 });
+dias.forEach(it => {
+const p = pesoDia(it.dayName), largo = p > 1;
+[["ida", it.ida], ["vuelta", it.vuelta]].forEach(([tipo, c]) => {
+if(!stats[c]) return;
+stats[c][tipo]++; stats[c].total++; stats[c].carga += p; if(largo) stats[c].largos++;
+});
+});
+return { dias, stats };
+}
+
+let cuadranteActual = null;
+
+function cellDriverSelect(it, tipo){
+const depsTipo = tipo === "ida" ? it.depsIda : it.depsVuelta;
+if(!depsTipo.length){
+return `<div class="cal-drv-row ${tipo} vacio">${tipo === "ida" ? "↗" : "↙"}<span>Sin ${tipo}</span></div>`;
+}
+const val = it[tipo];
+const edit = tipo === "ida" ? it.editIda : it.editVuelta;
+const u = val ? unidadDe(val) : null;
+const sinHijo = u && !u.hijos.some(h => depsTipo.includes(h));
+const opts = `<option value="">—</option>` + CONDUCTORES.map(c => `<option value="${c}" ${c === val ? "selected" : ""}>${c}</option>`).join("");
+return `<label class="cal-drv-row ${tipo} ${edit ? "edited" : ""} ${sinHijo ? "sin-hijo" : ""}" title="${tipo === "ida" ? "Ida" : "Vuelta"}${edit ? " (cambiado a mano)" : ""}${sinHijo ? " · su deportista no entrena este día" : ""}">${tipo === "ida" ? "↗" : "↙"}<select class="cal-select" data-key="${it.key}" data-tipo="${tipo}">${opts}</select></label>`;
+}
+
+const MES_CORTO = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+function semanasDelMes(year, month){
+const res = [];
+let d = mondayOf(new Date(year, month, 1));
+const fin = new Date(year, month + 1, 0);
+while(d <= fin){
+const vie = new Date(d); vie.setDate(d.getDate() + 4);
+if(vie >= new Date(year, month, 1)) res.push({ start: dateKey(d), lunes: new Date(d), viernes: vie });
+d = new Date(d); d.setDate(d.getDate() + 7);
+}
+return res;
+}
+
+// Selector lateral (una fila por semana) para la familia con varios conductores
+function familiaSelectHtml(weekStart){
+const cfg = configSemana(weekStart);
+return UNIDADES.filter(u => u.miembros.length > 1).map(u =>
+`<select class="sem-select" data-week="${weekStart}" data-unidad="${u.nombre}" title="Quién conduce de ${u.nombre} esta semana">
+${u.miembros.map(m => `<option value="${m}" ${cfg.familia[u.nombre] === m ? "selected" : ""}>${m}</option>`).join("")}
+</select>`).join("");
+}
+
+function renderCuadrante(){
+const picker = document.getElementById("monthPicker");
+if(!picker.value) return;
+const [y, m] = picker.value.split("-").map(Number);
+const pesoInput = document.getElementById("pesoLargo");
+if(document.activeElement !== pesoInput) pesoInput.value = getPesoLargo();
+cuadranteActual = buildCuadrante(y, m - 1);
+const { dias, stats } = cuadranteActual;
+const grid = document.getElementById("calGrid");
+const hoy = dateKey(new Date());
+const familias = UNIDADES.filter(u => u.miembros.length > 1);
+const porFecha = {};
+dias.forEach(it => porFecha[it.key] = it);
+
+const celda = it => {
+const esHoy = it.key === hoy ? " today" : "";
+if(!it.deps.length){
+return `<div class="cal-cell rest${esHoy}"><div class="cal-date"><span class="cal-dow">${it.dayName.slice(0,3)}</span><b>${it.date.getDate()}</b></div><div class="cal-rest-msg">Sin entreno</div></div>`;
+}
+return `
+<div class="cal-cell${esHoy}">
+<div class="cal-date"><span class="cal-dow">${it.dayName.slice(0,3)}</span><b>${it.date.getDate()}${DIAS_LARGOS.includes(it.dayName) ? `<span class="largo" title="Trayecto largo (×${fmtNum(getPesoLargo())})">×${fmtNum(getPesoLargo())}</span>` : ""}</b><span class="loc-pill ${locClass(it.locacion)}">${it.locacion}</span></div>
+${(() => { const mismo = it.depsIda.join() === it.depsVuelta.join(); const txt = mismo ? it.deps.join(", ") : [it.depsIda.length ? "↗ " + it.depsIda.join(", ") : "", it.depsVuelta.length ? "↙ " + it.depsVuelta.join(", ") : ""].filter(Boolean).join(" · "); return `<div class="cal-dep" title="${txt}">${txt}</div>`; })()}
+${cellDriverSelect(it, "ida")}
+${cellDriverSelect(it, "vuelta")}
+</div>`;
+};
+
+let html = DIAS_TEMPLATE.map(d => `<div class="cal-head">${d}</div>`).join("") +
+`<div class="cal-head side">${familias.map(u => u.nombre.replace(" + ", " / ")).join("<br>")}</div>`;
+const fmtCorto = d => `${d.getDate()} ${MES_CORTO[d.getMonth()]}`;
+semanasDelMes(y, m - 1).forEach(w => {
+html += `<div class="cal-week">`;
+for(let i = 0; i < 5; i++){
+const d = new Date(w.lunes); d.setDate(w.lunes.getDate() + i);
+const it = porFecha[dateKey(d)];
+html += it ? celda(it) : `<div class="cal-cell blank"></div>`;
+}
+html += `<div class="cal-side"><span class="side-label">${fmtCorto(w.lunes)} – ${fmtCorto(w.viernes)}<small>Conduce de ${familias.map(u => u.nombre.replace(" + ", " / ")).join(", ")}</small></span>${familiaSelectHtml(w.start)}</div></div>`;
+});
+grid.innerHTML = html;
+
+grid.querySelectorAll(".cal-select").forEach(sel => {
+sel.addEventListener("change", () => {
+const manual = getCuadranteManual();
+const k = sel.dataset.key;
+manual[k] = { ...(manual[k] || {}), [sel.dataset.tipo]: sel.value };
+saveAssignments(assignments);
+renderCuadrante();
+});
+});
+grid.querySelectorAll(".sem-select").forEach(sel => {
+sel.addEventListener("change", () => {
+const familia = { ...configSemana(sel.dataset.week).familia, [sel.dataset.unidad]: sel.value };
+setConfigSemana(sel.dataset.week, { familia });
+renderCuadrante();
+});
+});
+
+const hayCambios = dias.some(it => it.editIda || it.editVuelta);
+document.getElementById("resetCuadranteBtn").style.display = hayCambios ? "" : "none";
+
+// Pie: trayectos por conductor
+const total = k => CONDUCTORES.reduce((x, c) => x + stats[c][k], 0);
+const hijoDe = c => DEPORTISTAS.filter(d => (FAMILIA_DEPORTISTA[d] || []).includes(c)).join(", ");
+document.getElementById("repartoGrid").innerHTML = `
+<table class="pie-table">
+<tr><th></th>${CONDUCTORES.map(c => `<th>${c}<span>${hijoDe(c)}</span></th>`).join("")}<th>Total</th></tr>
+<tr><td>↗ Idas</td>${CONDUCTORES.map(c => `<td>${stats[c].ida}</td>`).join("")}<td>${total("ida")}</td></tr>
+<tr><td>↙ Vueltas</td>${CONDUCTORES.map(c => `<td>${stats[c].vuelta}</td>`).join("")}<td>${total("vuelta")}</td></tr>
+<tr><td>Trayectos</td>${CONDUCTORES.map(c => `<td>${stats[c].total}</td>`).join("")}<td>${total("total")}</td></tr>
+<tr><td>de ellos largos (M/J)</td>${CONDUCTORES.map(c => `<td>${stats[c].largos}</td>`).join("")}<td>${total("largos")}</td></tr>
+<tr class="tot"><td>Carga ponderada</td>${CONDUCTORES.map(c => `<td>${fmtNum(stats[c].carga)}</td>`).join("")}<td>${fmtNum(total("carga"))}</td></tr>
+</table>`;
+}
+
+function restablecerCuadrante(){
+if(!cuadranteActual) return;
+if(!confirm("Se quitarán los cambios manuales de este mes y se volverá al reparto automático. ¿Continuar?")) return;
+const manual = getCuadranteManual();
+cuadranteActual.dias.forEach(it => delete manual[it.key]);
+saveAssignments(assignments);
+renderCuadrante();
+}
+
+// Vuelca el cuadrante en las tarjetas semanales (conductores y deportistas).
+// Crea las semanas que falten y no toca las semanas ya pasadas.
+function aplicarCuadrante(){
+const msg = document.getElementById("applyMsg");
+if(!cuadranteActual) return;
+if(!confirm("Se sobrescribirán los conductores y deportistas de los días de este mes (salvo semanas pasadas). ¿Continuar?")) return;
+let aplicados = 0, omitidos = 0, nuevasSemanas = false;
+cuadranteActual.dias.forEach(it => {
+const monday = mondayOf(it.date);
+const start = dateKey(monday);
+if(getWeekStatus(start) === "past"){ omitidos++; return; }
+let week = WEEKS.find(w => w.start === start);
+if(!week){
+week = { start, label: formatWeekLabel(monday), days: buildDefaultDays() };
+WEEKS.push(week);
+WEEKS.sort((a,b) => a.start.localeCompare(b.start));
+extraWeeksCache.push(week);
+nuevasSemanas = true;
+}
+const dayObj = week.days.find(x => x.day === it.dayName);
+getAssignment(week.label, dayObj);
+const t = assignments[keyFor(week.label, it.dayName)].trayectos[0];
+t.conductorIda = it.ida;
+t.conductorVuelta = it.vuelta;
+t.deportistas = [...it.deps];
+aplicados++;
+});
+if(nuevasSemanas) saveExtraWeeks(extraWeeksCache);
+saveAssignments(assignments);
+const iso = document.getElementById("weekPicker").value;
+if(iso) currentWeekIndex = findWeekIndexByISO(iso);
+renderDays();
+msg.textContent = `Aplicado a ${aplicados} día${aplicados === 1 ? "" : "s"}` + (omitidos ? ` · ${omitidos} día${omitidos === 1 ? "" : "s"} de semanas pasadas sin cambios` : "");
+msg.className = "apply-msg ok";
+}
+
+let currentWeekIndex = -1;
+
+function findWeekIndexByISO(isoValue){
+return WEEKS.findIndex(w => dateToISOWeekValue(parseISODate(w.start)) === isoValue);
+}
+
+function driverOptionsHtml(selected){
+return `<option value="">Sin asignar</option>` +
+CONDUCTORES.map(c => `<option value="${c}" ${c===selected ? "selected":""}>${c}</option>`).join("");
+}
+
+function ubicacionOptionsHtml(selected){
+return UBICACIONES.map(u => `<option value="${u}" ${u===selected ? "selected":""}>${u}</option>`).join("");
+}
+
+const TIME_SLOTS = (() => {
+const slots = [];
+for(let h = 0; h < 24; h++){
+for(let m of [0,15,30,45]){
+slots.push(String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0"));
+}
+}
+return slots;
+})();
+
+function timeOptionsHtml(selected){
+return TIME_SLOTS.map(t => `<option value="${t}" ${t===selected ? "selected":""}>${t}</option>`).join("");
+}
+
+function getWeekStatus(startDateStr){
+// La semana se considera "activa" (editable, no futura) ya desde el día
+// anterior a su lunes de inicio, y sigue activa hasta el domingo de esa
+// misma semana. A partir del lunes siguiente pasa a "pasada".
+const monday = parseISODate(startDateStr);
+const activation = new Date(monday);
+activation.setDate(monday.getDate() - 1); // día anterior al inicio
+activation.setHours(0,0,0,0);
+const weekEnd = new Date(monday);
+weekEnd.setDate(monday.getDate() + 6); // domingo de esa semana
+weekEnd.setHours(0,0,0,0);
+const today = new Date();
+today.setHours(0,0,0,0);
+if(today < activation) return "future";
+if(today > weekEnd) return "past";
+return "current";
+}
+
+function renderDays(){
+const grid = document.getElementById("daysGrid");
+const flag = document.getElementById("noDataFlag");
+const statusFlag = document.getElementById("statusFlag");
+grid.innerHTML = "";
+if(currentWeekIndex === -1){
+document.getElementById("weekLabel").textContent = "Sin datos para la semana seleccionada";
+flag.style.display = "inline-block";
+statusFlag.style.display = "none";
+grid.innerHTML = `<div class="empty-msg">No hay trayectos registrados para esta semana. Usa las flechas o el selector para ir a una semana con datos.</div>`;
+return;
+}
+flag.style.display = "none";
+const week = WEEKS[currentWeekIndex];
+document.getElementById("weekLabel").textContent = week.label;
+const status = getWeekStatus(week.start);
+const editable = status !== "past";
+statusFlag.className = "status-flag " + status;
+statusFlag.style.display = "inline-block";
+statusFlag.textContent = status === "current"
+? "Semana actual — editable"
+: status === "past"
+? "Semana pasada — solo consulta"
+: "Semana futura — editable";
+
+week.days.forEach(d=>{
+const a = getAssignment(week.label, d);
+const card = document.createElement("div");
+card.className = "day-card" + (status === "future" ? " future-dim" : status === "current" ? " current-week" : "");
+
+const t = a.trayectos[0];
+const tagsHtml = DEPORTISTAS.map(name => {
+const isSel = t.deportistas.includes(name);
+return `<span class="tag-chip ${isSel ? "selected":""} ${editable ? "" : "locked"}" data-day="${d.day}" data-name="${name}">${name}</span>`;
+}).join("");
+
+card.innerHTML = `
+<div class="day-head">
+<span class="day-name">${d.day}</span>
+</div>
+<div class="day-body">
+<div>
+<div class="field-label">Ubicación</div>
+<select class="driver-select loc-select" data-day="${d.day}" ${editable ? "" : "disabled"}>
+${ubicacionOptionsHtml(t.locacion)}
+</select>
+</div>
+<div class="time-grid">
+<div>
+<div class="field-label">Hora inicio</div>
+<select class="time-input" data-day="${d.day}" data-role="horaInicio" ${editable ? "" : "disabled"}>
+${timeOptionsHtml(t.horaInicio)}
+</select>
+</div>
+<div>
+<div class="field-label">Hora fin</div>
+<select class="time-input" data-day="${d.day}" data-role="horaFin" ${editable ? "" : "disabled"}>
+${timeOptionsHtml(t.horaFin)}
+</select>
+</div>
+</div>
+<div>
+<div class="field-label driver-label">Conductores (ida / vuelta)</div>
+<div class="drivers-grid">
+<select class="driver-select" data-day="${d.day}" data-role="conductorIda" ${editable ? "" : "disabled"}>
+${driverOptionsHtml(t.conductorIda)}
+</select>
+<select class="driver-select" data-day="${d.day}" data-role="conductorVuelta" ${editable ? "" : "disabled"}>
+${driverOptionsHtml(t.conductorVuelta)}
+</select>
+</div>
+</div>
+<div class="deportistas-wrap">
+<div class="deportistas-label">Deportistas</div>
+<div class="tag-list">${tagsHtml}</div>
+</div>
+</div>
+`;
+grid.appendChild(card);
+});
+
+if(editable){
+grid.querySelectorAll("select.driver-select[data-role], select.time-input").forEach(sel=>{
+sel.addEventListener("change", (e)=>{
+setAssignment(week.label, e.target.dataset.day, { [e.target.dataset.role]: e.target.value });
+});
+});
+grid.querySelectorAll("select.loc-select").forEach(sel=>{
+sel.addEventListener("change", (e)=>{
+setAssignment(week.label, e.target.dataset.day, { locacion: e.target.value });
+renderDays();
+renderCuadrante();
+});
+});
+grid.querySelectorAll(".tag-chip").forEach(chip=>{
+chip.addEventListener("click", ()=>{
+const day = chip.dataset.day;
+const name = chip.dataset.name;
+const a2 = getAssignment(week.label, week.days.find(x=>x.day===day));
+let list = a2.trayectos[0].deportistas.slice();
+if(list.includes(name)) list = list.filter(n=>n!==name);
+else list.push(name);
+setAssignment(week.label, day, { deportistas: list });
+renderDays();
+});
+});
+}
+}
+
+function goToWeek(isoValue){
+document.getElementById("weekPicker").value = isoValue;
+currentWeekIndex = findWeekIndexByISO(isoValue);
+renderDays();
+updateNavButtons(isoValue);
+}
+
+function shiftWeeks(isoValue, delta){
+const [yr, wk] = isoValue.split("-W").map(Number);
+const simple = new Date(Date.UTC(yr, 0, 1 + (wk-1)*7));
+const dow = simple.getUTCDay();
+const isoStart = new Date(simple);
+if(dow <= 4) isoStart.setUTCDate(simple.getUTCDate() - dow + 1);
+else isoStart.setUTCDate(simple.getUTCDate() + 8 - dow);
+isoStart.setUTCDate(isoStart.getUTCDate() + delta*7);
+return dateToISOWeekValue(isoStart);
+}
+
+function updateNavButtons(){
+document.getElementById("prevWeek").disabled = false;
+document.getElementById("nextWeek").disabled = false;
+}
+
+// Pasa los conductores de la semana mostrada al cuadrante (como cambios
+// manuales). Solo se copian los conductores asignados; "Sin asignar" no
+// borra lo que haya en el cuadrante. Devuelve cuántos trayectos cambian.
+function sincronizarSemanaConCuadrante(){
+if(currentWeekIndex === -1) return { cambios:0, dias:0 };
+const week = WEEKS[currentWeekIndex];
+const lunes = parseISODate(week.start);
+const manual = getCuadranteManual();
+const cache = {};
+const valorCuadrante = (fecha) => {
+const mk = fecha.getFullYear() + "-" + fecha.getMonth();
+if(!cache[mk]) cache[mk] = buildCuadrante(fecha.getFullYear(), fecha.getMonth());
+return cache[mk].dias.find(x => x.key === dateKey(fecha));
+};
+let cambios = 0, dias = 0;
+week.days.forEach(d => {
+const idx = DIAS_TEMPLATE.indexOf(d.day);
+if(idx < 0) return;
+const fecha = new Date(lunes); fecha.setDate(lunes.getDate() + idx);
+const t = getAssignment(week.label, d).trayectos[0];
+const actual = valorCuadrante(fecha);
+if(!actual) return;
+let tocado = false;
+[["ida", t.conductorIda, actual.depsIda], ["vuelta", t.conductorVuelta, actual.depsVuelta]].forEach(([tipo, val, deps]) => {
+if(!val || !deps.length) return;
+if(actual[tipo] !== val) cambios++;
+manual[actual.key] = { ...(manual[actual.key] || {}), [tipo]: val };
+tocado = true;
+});
+if(tocado) dias++;
+});
+return { cambios, dias };
+}
+
+let toastTimer = null;
+function mostrarAviso(html, tipo){
+const el = document.getElementById("toast");
+el.innerHTML = html;
+el.className = "toast show " + (tipo || "ok");
+clearTimeout(toastTimer);
+toastTimer = setTimeout(() => el.classList.remove("show"), 4500);
+}
+
+document.getElementById("saveBtn").addEventListener("click", ()=>{
+const { cambios } = sincronizarSemanaConCuadrante();
+saveAssignments(assignments);
+renderCuadrante();
+const extra = cambios
+? `Cuadrante actualizado: ${cambios} trayecto${cambios === 1 ? "" : "s"} cambiado${cambios === 1 ? "" : "s"}.`
+: `El cuadrante ya estaba al día.`;
+mostrarAviso(`<b>Cambios guardados.</b> ${extra} <a href="#cuadrante">Ver cuadrante</a>`, "ok");
+const msg = document.getElementById("saveMsg");
+msg.textContent = "Guardado";
+msg.classList.add("show");
+clearTimeout(window._saveMsgTimeout);
+window._saveMsgTimeout = setTimeout(()=> msg.classList.remove("show"), 2200);
+});
+
+document.getElementById("prevWeek").addEventListener("click", ()=>{
+const cur = document.getElementById("weekPicker").value;
+goToWeek(shiftWeeks(cur, -1));
+});
+
+document.getElementById("nextWeek").addEventListener("click", ()=>{
+const cur = document.getElementById("weekPicker").value;
+goToWeek(shiftWeeks(cur, 1));
+});
+
+document.getElementById("weekPicker").addEventListener("change", (e)=>{
+goToWeek(e.target.value);
+});
+
+function loadAllWeeks(){
+// Reconstruye WEEKS partiendo solo de la semana base + las semanas extra
+// guardadas en Google Sheets (evita duplicados si se llama varias veces).
+WEEKS.length = 1;
+extraWeeksCache.forEach(w => {
+if(!WEEKS.find(x => x.start === w.start)) WEEKS.push(w);
+});
+WEEKS.sort((a,b) => a.start.localeCompare(b.start));
+}
+
+document.getElementById("toggleAddWeek").addEventListener("click", ()=>{
+document.getElementById("addWeekPanel").classList.toggle("open");
+});
+
+document.getElementById("createWeekBtn").addEventListener("click", ()=>{
+const msg = document.getElementById("addWeekMsg");
+const isoValue = document.getElementById("newWeekPicker").value;
+if(!isoValue){
+msg.textContent = "Elige primero una semana.";
+msg.className = "add-week-msg err";
+return;
+}
+const monday = isoWeekValueToMonday(isoValue);
+const status = getWeekStatus(monday.getFullYear() + "-" + String(monday.getMonth()+1).padStart(2,"0") + "-" + String(monday.getDate()).padStart(2,"0"));
+if(status === "past"){
+msg.textContent = "No se pueden crear trayectos para una semana pasada.";
+msg.className = "add-week-msg err";
+return;
+}
+const startStr = monday.getFullYear() + "-" + String(monday.getMonth()+1).padStart(2,"0") + "-" + String(monday.getDate()).padStart(2,"0");
+if(WEEKS.find(w => w.start === startStr)){
+msg.textContent = "Esa semana ya existe. Navegando a ella.";
+msg.className = "add-week-msg ok";
+goToWeek(isoValue);
+return;
+}
+const newWeek = { start: startStr, label: formatWeekLabel(monday), days: buildDefaultDays() };
+WEEKS.push(newWeek);
+WEEKS.sort((a,b) => a.start.localeCompare(b.start));
+const extra = loadExtraWeeks();
+extra.push(newWeek);
+saveExtraWeeks(extra);
+msg.textContent = "Semana creada. Ya puedes completar sus trayectos.";
+msg.className = "add-week-msg ok";
+goToWeek(isoValue);
+});
+
+let sheetsReady = false;
+let lastRawSnapshot = "";
+
+function applyRemoteData(data){
+data = data || {};
+assignments = data.assignments || {};
+extraWeeksCache = data.extraWeeks || [];
+loadAllWeeks();
+renderDiasBlock();
+renderCuadrante();
+}
+
+async function pollSharedData(isFirstLoad){
+try{
+const data = await fetchSharedData();
+const raw = JSON.stringify(data);
+if(raw === lastRawSnapshot && !isFirstLoad) return; // nada ha cambiado, no re-renderizamos
+lastRawSnapshot = raw;
+applyRemoteData(data);
+if(isFirstLoad){
+const initialISO = dateToISOWeekValue(new Date());
+goToWeek(initialISO);
+sheetsReady = true;
+} else {
+// Cambios hechos por otra persona: refrescamos la semana que se está viendo.
+if(currentWeekIndex !== -1){
+const isoActual = dateToISOWeekValue(parseISODate(WEEKS[currentWeekIndex].start));
+currentWeekIndex = findWeekIndexByISO(isoActual);
+}
+renderDays();
+}
+}catch(err){
+console.error("Error conectando con Google Sheets:", err);
+if(isFirstLoad){
+document.getElementById("daysGrid").innerHTML =
+`<div class="empty-msg">No se pudo conectar con Google Sheets.<br>Revisa SHEETS_API_URL y que la implementación sea "Cualquier usuario".</div>`;
+}
+}
+}
+
+document.getElementById("monthPicker").addEventListener("change", renderCuadrante);
+document.getElementById("pesoLargo").addEventListener("change", (e) => {
+const v = Math.min(5, Math.max(1, Number(e.target.value) || PESO_LARGO_DEFECTO));
+if(!assignments[CONFIG_KEY]) assignments[CONFIG_KEY] = {};
+assignments[CONFIG_KEY].pesoLargo = v;
+saveAssignments(assignments);
+renderCuadrante();
+});
+document.getElementById("applyCuadranteBtn").addEventListener("click", aplicarCuadrante);
+document.getElementById("resetCuadranteBtn").addEventListener("click", restablecerCuadrante);
+
+function renderFamiliasList(){
+const ul = document.getElementById("familiasList");
+if(!ul) return;
+ul.innerHTML = DEPORTISTAS.map(d => `<li><b>${d}</b><span>${(FAMILIA_DEPORTISTA[d] || []).join(" y ") || "—"}</span></li>`).join("");
+}
+
+// ============ NAVEGACIÓN POR ENLACES (#semana, #cuadrante, #configuracion) ============
+const VISTAS = ["semana", "cuadrante", "configuracion"];
+function mostrarVista(){
+let v = (location.hash || "").replace("#", "");
+if(v === "config") v = "configuracion";
+if(!VISTAS.includes(v)) v = "semana";
+document.querySelectorAll(".view").forEach(el => el.classList.toggle("active", el.dataset.view === v));
+document.querySelectorAll(".nav a, .tabbar a").forEach(a => {
+const on = a.dataset.view === v;
+a.classList.toggle("active", on);
+if(on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+});
+window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", mostrarVista);
+
+function init(){
+mostrarVista();
+renderFamiliasList();
+const now = new Date();
+document.getElementById("monthPicker").value = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+document.getElementById("daysGrid").innerHTML =
+`<div class="empty-msg">Cargando datos compartidos desde Google Sheets…</div>`;
+pollSharedData(true);
+setInterval(() => { if(sheetsReady) pollSharedData(false); }, POLL_INTERVAL_MS);
+}
+
+init();
+</script>
+</body>
+</html>
